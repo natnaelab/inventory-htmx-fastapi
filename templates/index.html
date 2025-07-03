@@ -173,13 +173,35 @@
     <a href="/export" class="export-btn">⬇️ Excel Export</a>
 
     <p id="row-count"><strong>Rows:</strong> {{ hardware_list|length }}</p>
-    <nav style="background-color:#007acc; padding:10px; color:white; font-family: Arial, sans-serif;">
-        <a href="/" style="color:white; margin-right:15px; text-decoration:none; font-weight:bold;">Alle Geräte</a>
-        <a href="/status/lager" style="color:white; margin-right:15px; text-decoration:none;">Im Lager</a>
-        <a href="/status/betankung" style="color:white; margin-right:15px; text-decoration:none;">In Betankung</a>
-        <a href="/status/versendet" style="color:white; margin-right:15px; text-decoration:none;">Versendet</a>
-        <a href="/add" style="color:white; margin-right:15px; text-decoration:none;">Neues Gerät</a>
+    <nav style="background-color:#007acc; padding:10px; color:white; font-family: Arial, sans-serif; display: flex; align-items: center;">
+    <button 
+        onclick="location.href='/'" 
+        style="background:none; border:none; color:white; margin-right:15px; font-weight:bold; cursor:pointer; font-size:1rem;">
+        Alle Geräte
+    </button>
+    <button 
+        onclick="location.href='/status/lager'" 
+        style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
+        Im Lager
+    </button>
+    <button 
+        onclick="location.href='/status/betankung'" 
+        style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
+        In Betankung
+    </button>
+    <button 
+        onclick="location.href='/status/versendet'" 
+        style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
+        Versendet
+    </button>
+    
+    <button 
+        onclick="location.href='/add'" 
+        style="margin-left:auto; background:#2563eb; border:none; border-radius:6px; padding:8px 16px; font-weight:600; cursor:pointer; color:white; font-size:1rem; transition: background-color 0.3s ease;">
+        Neues Gerät
+    </button>
     </nav>
+
     <table>
         <thead>
             <tr>
