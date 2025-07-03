@@ -28,6 +28,15 @@
             text-align: center;
             font-weight: 600;
         }
+        .error-message {
+            background-color: #ffe6e6;
+            color: #d8000c;
+            border: 1px solid #d8000c;
+            padding: 10px 15px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
         form {
             display: flex;
             flex-direction: column;
@@ -88,17 +97,22 @@
 <body>
     <div class="container">
         <h2>Neue Hardware hinzufügen</h2>
+        
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+        
         <form method="post" action="/add">
             {% for field in ["hostname", "mac", "ip", "ticket", "uuid", "zentrum", "seriennumber", "enduser", "admin"] %}
-                <label for="{{ field }}">{{ field|capitalize }}:</label>
-                <input id="{{ field }}" type="text" name="{{ field }}" required />
+                <label for="{{ field }}">{{ field|capitalize }}</label>
+                <input id="{{ field }}" type="text" name="{{ field }}" required autocomplete="off" />
             {% endfor %}
 
-            <label for="status">Status:</label>
+            <label for="status">Status</label>
             <select id="status" name="status" required>
-                <option value="Lager">Lager</option>
-                <option value="im Betankungsprozess">im Betankungsprozess</option>
-                <option value="Versendet">Versendet</option>
+                <option value="LAGER">Lager</option>
+                <option value="BETANKUNG">im Betankungsprozess</option>
+                <option value="VERSENDET">Versendet</option>
             </select>
 
             <div class="buttons">

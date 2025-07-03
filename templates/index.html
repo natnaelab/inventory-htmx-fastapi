@@ -78,6 +78,27 @@
             white-space: nowrap;
         }
 
+        /* Kommentar-Zelle etwas schmaler und mit Tooltip */
+        td.comment-cell {
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-style: italic;
+            color: #555;
+            cursor: default;
+        }
+        td.comment-cell:hover {
+            white-space: normal;
+            overflow: visible;
+            background-color: #fefefe;
+            box-shadow: 0 0 6px rgba(0,0,0,0.15);
+            position: relative;
+            z-index: 2;
+            padding: 12px 20px;
+            border-radius: 6px;
+        }
+
         /* Status-Button Styling */
         .status-button {
             padding: 6px 12px;
@@ -164,42 +185,49 @@
             td.actions {
                 justify-content: flex-start;
             }
+            td.comment-cell:hover {
+                white-space: normal;
+                overflow: visible;
+                box-shadow: none;
+                position: static;
+                padding: 0;
+            }
         }
     </style>
 </head>
 <body>
     
-    <h2><h2>{{ title if title else "Hardware Overview" }}</h2></h2>
+    <h2>{{ title if title else "Hardware Overview" }}</h2>
     <a href="/export" class="export-btn">⬇️ Excel Export</a>
 
     <p id="row-count"><strong>Rows:</strong> {{ hardware_list|length }}</p>
     <nav style="background-color:#007acc; padding:10px; color:white; font-family: Arial, sans-serif; display: flex; align-items: center;">
-    <button 
-        onclick="location.href='/'" 
-        style="background:none; border:none; color:white; margin-right:15px; font-weight:bold; cursor:pointer; font-size:1rem;">
-        Alle Geräte
-    </button>
-    <button 
-        onclick="location.href='/status/lager'" 
-        style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
-        Im Lager
-    </button>
-    <button 
-        onclick="location.href='/status/betankung'" 
-        style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
-        In Betankung
-    </button>
-    <button 
-        onclick="location.href='/status/versendet'" 
-        style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
-        Versendet
-    </button>
-    
-    <button 
-        onclick="location.href='/add'" 
-        style="margin-left:auto; background:grey; border:none; border-radius:6px; padding:8px 16px; font-weight:600; cursor:pointer; color:white; font-size:1rem; transition: background-color 0.3s ease;">
-        Neues Gerät
-    </button>
+        <button 
+            onclick="location.href='/'" 
+            style="background:none; border:none; color:white; margin-right:15px; font-weight:bold; cursor:pointer; font-size:1rem;">
+            Alle Geräte
+        </button>
+        <button 
+            onclick="location.href='/status/lager'" 
+            style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
+            Im Lager
+        </button>
+        <button 
+            onclick="location.href='/status/betankung'" 
+            style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
+            In Betankung
+        </button>
+        <button 
+            onclick="location.href='/status/versendet'" 
+            style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
+            Versendet
+        </button>
+        
+        <button 
+            onclick="location.href='/add'" 
+            style="margin-left:auto; background:grey; border:none; border-radius:6px; padding:8px 16px; font-weight:600; cursor:pointer; color:white; font-size:1rem; transition: background-color 0.3s ease;">
+            Neues Gerät
+        </button>
     </nav>
 
     <table>
@@ -213,9 +241,11 @@
                 <th>UUID</th>
                 <th>Zentrum</th>
                 <th>SerienNumber</th>
+                <th>Modell</th>
                 <th>Status</th>
                 <th>Enduser</th>
                 <th>Admin</th>
+                <th>Kommentar</th>
                 <th>Timestamp</th>
                 <th>Aktionen</th>
             </tr>
@@ -231,6 +261,7 @@
                 <td data-label="UUID">{{ hw.uuid }}</td>
                 <td data-label="Zentrum">{{ hw.zentrum }}</td>
                 <td data-label="SerienNumber">{{ hw.seriennumber }}</td>
+                <td data-label="Modell">{{ hw.modell }}</td>
                 <td data-label="Status" id="status-{{ hw.id }}">
                     <button 
                         hx-post="/update_status/{{ hw.id }}" 
@@ -243,6 +274,7 @@
                 </td>
                 <td data-label="Enduser">{{ hw.enduser }}</td>
                 <td data-label="Admin">{{ hw.admin }}</td>
+                <td data-label="Kommentar" class="comment-cell" title="{{ hw.kommentar|e }}">{{ hw.kommentar }}</td>
                 <td data-label="Timestamp">{{ hw.timestamp.strftime('%Y-%m-%d %H:%M:%S') if hw.timestamp else "" }}</td>
                 <td data-label="Aktionen" class="actions">
                     <a href="/edit/{{ hw.id }}" title="Bearbeiten">✏️</a>

@@ -38,7 +38,8 @@
             color: #555;
         }
         input[type="text"],
-        select {
+        select,
+        textarea {
             padding: 8px 12px;
             margin-bottom: 20px;
             border: 1.8px solid #ddd;
@@ -48,10 +49,15 @@
             font-family: inherit;
         }
         input[type="text"]:focus,
-        select:focus {
+        select:focus,
+        textarea:focus {
             border-color: #0078d7;
             outline: none;
             box-shadow: 0 0 5px rgba(0, 120, 215, 0.5);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
         }
         .buttons {
             display: flex;
@@ -113,6 +119,9 @@
             <label for="seriennumber">Seriennummer:</label>
             <input id="seriennumber" type="text" name="seriennumber" value="{{ hw.seriennumber }}" />
 
+            <label for="modell">Modell:</label>
+            <input id="modell" type="text" name="modell" value="{{ hw.modell }}" />
+
             <label for="status">Status:</label>
             <select name="status" id="status" required>
                 {% for status in StatusEnum %}
@@ -123,8 +132,8 @@
             <label for="enduser">Enduser:</label>
             <input id="enduser" type="text" name="enduser" value="{{ hw.enduser }}" />
 
-            <label for="admin">Admin:</label>
-            <input id="admin" type="text" name="admin" value="{{ hw.admin }}" />
+            <label for="kommentar">Kommentar:</label>
+            <textarea id="kommentar" name="kommentar">{{ hw.kommentar or '' }}</textarea>
 
             <div class="buttons">
                 <button type="submit">💾 Speichern</button>

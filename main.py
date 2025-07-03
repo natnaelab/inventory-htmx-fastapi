@@ -43,7 +43,7 @@ def read_table(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/add", response_class=HTMLResponse)
 def add_form(request: Request):
-    return templates.TemplateResponse("add_form.html", {"request": request})
+    return templates.TemplateResponse("add_form.html", {"request": request, "StatusEnum": StatusEnum, "request": request})
 
 @app.post("/add", response_class=HTMLResponse)
 def add_entry(
@@ -51,13 +51,15 @@ def add_entry(
     hostname: str = Form(...),
     mac: str = Form(...),
     ip: str = Form(...),
-    ticket: str = Form(...),
-    uuid: str = Form(...),
-    zentrum: str = Form(...),
-    seriennumber: str = Form(...),
+    ticket: str = Form(None),
+    uuid: str = Form(None),
+    zentrum: str = Form(None),
+    seriennumber: str = Form(None),
     status: str = Form(...),
-    enduser: str = Form(...),
-    admin: str = Form(...),
+    enduser: str = Form(None),
+    model: str = Form(None),      # das alte "admin" als "model"
+    admin: str = Form(None),      # neu: admin für Betankungs-Admins
+    comment: str = Form(None),    # neu: Kommentarfeld
     db: Session = Depends(get_db),
 ):
     try:
@@ -71,18 +73,20 @@ def add_entry(
             seriennumber=seriennumber,
             status=StatusEnum(status.upper()),
             enduser=enduser,
-            admin=admin,
+            model=model,          # altes Admin-Feld jetzt model
+            admin=admin,          # neues Admin-Feld
+            comment=comment,      # Kommentar
             timestamp=datetime.utcnow(),
         )
     except ValueError:
-        return templates.TemplateResponse("add_form.html", {"request": request, "error": f"Ungültiger Statuswert: {status}"})
+        return templates.TemplateResponse("add_form.html", {"request": request, "error": f"Ungültiger Statuswert: {status}", "StatusEnum": StatusEnum})
 
     db.add(hw)
     try:
         db.commit()
     except IntegrityError:
         db.rollback()
-        return templates.TemplateResponse("add_form.html", {"request": request, "error": "Fehler: Ungültige Daten oder Duplikat"})
+        return templates.TemplateResponse("add_form.html", {"request": request, "error": "Fehler: Ungültige Daten oder Duplikat", "StatusEnum": StatusEnum})
 
     return RedirectResponse(url="/", status_code=303)
 
@@ -92,11 +96,13 @@ def update_status(hw_id: int, db: Session = Depends(get_db)):
     if not hw:
         raise HTTPException(status_code=404, detail="Hardware nicht gefunden")
 
-    # Status rotieren
+    # Status rotieren nach neuem Enum
     if hw.status == StatusEnum.LAGER:
         hw.status = StatusEnum.BETANKUNG
     elif hw.status == StatusEnum.BETANKUNG:
-        hw.status = StatusEnum.VERSENDET
+        hw.status = StatusEnum.VERSAND
+    elif hw.status == StatusEnum.VERSAND:
+        hw.status = StatusEnum.ABGESCHLOSSEN
     else:
         hw.status = StatusEnum.LAGER
 
@@ -123,13 +129,15 @@ class HardwareCreate(BaseModel):
     hostname: str
     mac: str
     ip: str
-    ticket: str
-    uuid: str
-    zentrum: str
-    seriennumber: str
+    ticket: str = None
+    uuid: str = None
+    zentrum: str = None
+    seriennumber: str = None
     status: str
-    enduser: str
-    admin: str
+    enduser: str = None
+    model: str = None
+    admin: str = None
+    comment: str = None
     timestamp: str
 
 @app.post("/api/hardware")
@@ -171,7 +179,7 @@ def export_excel(db: Session = Depends(get_db)):
 
     headers = [
         "ID", "Hostname", "MAC", "IP", "Ticket", "UUID", "Zentrum",
-        "SerienNumber", "Status", "Enduser", "Admin", "Timestamp"
+        "SerienNumber", "Status", "Enduser", "Model", "Admin", "Comment", "Timestamp"
     ]
     ws.append(headers)
 
@@ -180,11 +188,11 @@ def export_excel(db: Session = Depends(get_db)):
             hw.id, hw.hostname, hw.mac, hw.ip, hw.ticket, hw.uuid,
             hw.zentrum, hw.seriennumber,
             hw.status.value if hw.status else "",
-            hw.enduser, hw.admin,
+            hw.enduser, hw.model, hw.admin, hw.comment,
             hw.timestamp.strftime("%Y-%m-%d %H:%M:%S") if hw.timestamp else ""
         ])
 
-    table_ref = f"A1:L{ws.max_row}"
+    table_ref = f"A1:O{ws.max_row}"
     tab = Table(displayName="HardwareTabelle", ref=table_ref)
 
     style = TableStyleInfo(
@@ -213,8 +221,6 @@ def export_excel(db: Session = Depends(get_db)):
 
 # --- Edit Hardware ---
 
-from models import StatusEnum  # falls noch nicht importiert
-
 @app.get("/edit/{hw_id}", response_class=HTMLResponse)
 def edit_form(request: Request, hw_id: int, db: Session = Depends(get_db)):
     hw = db.query(Hardware).get(hw_id)
@@ -223,7 +229,7 @@ def edit_form(request: Request, hw_id: int, db: Session = Depends(get_db)):
     return templates.TemplateResponse("edit_form.html", {
         "request": request,
         "hw": hw,
-        "StatusEnum": StatusEnum  # Hier StatusEnum mitgeben
+        "StatusEnum": StatusEnum
     })
 
 @app.post("/edit/{hw_id}")
@@ -232,13 +238,15 @@ def update_entry(
     hostname: str = Form(...),
     mac: str = Form(...),
     ip: str = Form(...),
-    ticket: str = Form(...),
-    uuid: str = Form(...),
-    zentrum: str = Form(...),
-    seriennumber: str = Form(...),
+    ticket: str = Form(None),
+    uuid: str = Form(None),
+    zentrum: str = Form(None),
+    seriennumber: str = Form(None),
     status: str = Form(...),
-    enduser: str = Form(...),
-    admin: str = Form(...),
+    enduser: str = Form(None),
+    model: str = Form(None),
+    admin: str = Form(None),
+    comment: str = Form(None),
     db: Session = Depends(get_db),
 ):
     hw = db.query(Hardware).get(hw_id)
@@ -259,7 +267,9 @@ def update_entry(
         raise HTTPException(status_code=400, detail="Ungültiger Statuswert")
 
     hw.enduser = enduser
-    hw.admin = admin
+    hw.model = model      # altes Adminfeld jetzt model
+    hw.admin = admin      # neuer Admin
+    hw.comment = comment  # Kommentar
 
     db.commit()
     return RedirectResponse(url="/", status_code=303)
@@ -278,7 +288,6 @@ def delete_entry(hw_id: int, db: Session = Depends(get_db)):
 
 @app.get("/status/{status_filter}", response_class=HTMLResponse)
 def read_filtered_table(request: Request, status_filter: str, db: Session = Depends(get_db)):
-    # StatusEnum erwartet Großbuchstaben (so wie du es oben nutzt)
     try:
         status_enum = StatusEnum(status_filter.upper())
     except ValueError:
