@@ -132,6 +132,18 @@
             <label for="enduser">Enduser:</label>
             <input id="enduser" type="text" name="enduser" value="{{ hw.enduser }}" />
 
+            <label for="admin">Admin:</label>
+            <input id="admin" type="text" name="admin" value="{{ hw.admin }}" />
+
+            <label for="kommentar">Kommentar:</label>
+            <input id="kommentar" type="text" name="kommentar" value="{{ hw.kommentar }}" />
+
+            <label for="timestamp">Timestamp:</label>
+            <input id="timestamp" type="text" name="timestamp" value="{{ hw.timestamp.strftime('%Y-%m-%d %H:%M:%S') if hw.timestamp else '' }}" readonly />
+
+            <label for="enduser">Enduser:</label>
+            <input id="enduser" type="text" name="enduser" value="{{ hw.enduser }}" />
+
             <label for="kommentar">Kommentar:</label>
             <textarea id="kommentar" name="kommentar">{{ hw.kommentar or '' }}</textarea>
 

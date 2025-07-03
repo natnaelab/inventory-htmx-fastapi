@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Neue Hardware hinzufügen</title>
+    <title>Neues Gerät hinzufügen</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -28,15 +28,6 @@
             text-align: center;
             font-weight: 600;
         }
-        .error-message {
-            background-color: #ffe6e6;
-            color: #d8000c;
-            border: 1px solid #d8000c;
-            padding: 10px 15px;
-            margin-bottom: 16px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
         form {
             display: flex;
             flex-direction: column;
@@ -49,17 +40,23 @@
         input[type="text"],
         select {
             padding: 8px 12px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             border: 1.8px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
             transition: border-color 0.3s;
+            font-family: inherit;
         }
         input[type="text"]:focus,
         select:focus {
             border-color: #0078d7;
             outline: none;
             box-shadow: 0 0 5px rgba(0, 120, 215, 0.5);
+        }
+        input[readonly] {
+            background-color: #f0f0f0;
+            color: #777;
+            cursor: not-allowed;
         }
         .buttons {
             display: flex;
@@ -78,6 +75,8 @@
             cursor: pointer;
             transition: background-color 0.3s;
             user-select: none;
+            min-width: 100px;
+            text-align: center;
         }
         button:hover {
             background-color: #005a9e;
@@ -96,27 +95,50 @@
 </head>
 <body>
     <div class="container">
-        <h2>Neue Hardware hinzufügen</h2>
-        
-        {% if error %}
-        <div class="error-message">{{ error }}</div>
-        {% endif %}
-        
+        <h2>Neues Gerät hinzufügen</h2>
         <form method="post" action="/add">
-            {% for field in ["hostname", "mac", "ip", "ticket", "uuid", "zentrum", "seriennumber", "enduser", "admin"] %}
-                <label for="{{ field }}">{{ field|capitalize }}</label>
-                <input id="{{ field }}" type="text" name="{{ field }}" required autocomplete="off" />
-            {% endfor %}
+            <label for="hostname">Hostname:</label>
+            <input id="hostname" type="text" name="hostname" required />
 
-            <label for="status">Status</label>
-            <select id="status" name="status" required>
-                <option value="LAGER">Lager</option>
-                <option value="BETANKUNG">im Betankungsprozess</option>
-                <option value="VERSENDET">Versendet</option>
+            <label for="mac">MAC:</label>
+            <input id="mac" type="text" name="mac" required />
+
+            <label for="ip">IP:</label>
+            <input id="ip" type="text" name="ip" required />
+
+            <label for="ticket">Ticket:</label>
+            <input id="ticket" type="text" name="ticket" />
+
+            <label for="uuid">UUID:</label>
+            <input id="uuid" type="text" name="uuid" />
+
+            <label for="zentrum">Zentrum:</label>
+            <input id="zentrum" type="text" name="zentrum" />
+
+            <label for="seriennumber">Seriennummer:</label>
+            <input id="seriennumber" type="text" name="seriennumber" />
+
+            <label for="status">Status:</label>
+            <select name="status" id="status" required>
+                {% for status in StatusEnum %}
+                    <option value="{{ status.name }}">{{ status.value }}</option>
+                {% endfor %}
             </select>
 
+            <label for="enduser">Enduser:</label>
+            <input id="enduser" type="text" name="enduser" />
+
+            <label for="admin">Admin:</label>
+            <input id="admin" type="text" name="admin" />
+
+            <label for="kommentar">Kommentar:</label>
+            <input id="kommentar" type="text" name="kommentar" />
+
+            <label for="timestamp">Timestamp:</label>
+            <input id="timestamp" type="text" name="timestamp" value="" readonly />
+
             <div class="buttons">
-                <button type="submit">💾 Hinzufügen</button>
+                <button type="submit">💾 Speichern</button>
                 <a href="/"><button type="button">Zurück</button></a>
             </div>
         </form>

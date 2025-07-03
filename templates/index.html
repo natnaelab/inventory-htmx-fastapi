@@ -230,6 +230,8 @@
         </button>
     </nav>
 
+<!-- index.html: Spalten wie bisher, keine Kommentar-, Admin- oder Timestamp-Spalte -->
+
     <table>
         <thead>
             <tr>
@@ -241,12 +243,8 @@
                 <th>UUID</th>
                 <th>Zentrum</th>
                 <th>SerienNumber</th>
-                <th>Modell</th>
                 <th>Status</th>
                 <th>Enduser</th>
-                <th>Admin</th>
-                <th>Kommentar</th>
-                <th>Timestamp</th>
                 <th>Aktionen</th>
             </tr>
         </thead>
@@ -261,7 +259,6 @@
                 <td data-label="UUID">{{ hw.uuid }}</td>
                 <td data-label="Zentrum">{{ hw.zentrum }}</td>
                 <td data-label="SerienNumber">{{ hw.seriennumber }}</td>
-                <td data-label="Modell">{{ hw.modell }}</td>
                 <td data-label="Status" id="status-{{ hw.id }}">
                     <button 
                         hx-post="/update_status/{{ hw.id }}" 
@@ -273,9 +270,6 @@
                     </button>
                 </td>
                 <td data-label="Enduser">{{ hw.enduser }}</td>
-                <td data-label="Admin">{{ hw.admin }}</td>
-                <td data-label="Kommentar" class="comment-cell" title="{{ hw.kommentar|e }}">{{ hw.kommentar }}</td>
-                <td data-label="Timestamp">{{ hw.timestamp.strftime('%Y-%m-%d %H:%M:%S') if hw.timestamp else "" }}</td>
                 <td data-label="Aktionen" class="actions">
                     <a href="/edit/{{ hw.id }}" title="Bearbeiten">✏️</a>
                     <form method="post" action="/delete/{{ hw.id }}" onsubmit="return confirm('Willst du diesen Eintrag wirklich löschen?');">
@@ -286,5 +280,6 @@
             {% endfor %}
         </tbody>
     </table>
+
 </body>
 </html>
