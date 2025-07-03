@@ -1,0 +1,56 @@
+version: "0.2"
+services:
+  
+  db:
+    image: mariadb
+    container_name: mariadb
+    restart: always
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "-u", "root", "-p rootpass", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: geraete_db
+      MARIADB_USER: appuser
+      MARIADB_PASSWORD: apppass
+    ports:
+    - "3306:3306"
+    volumes:
+    - 'db_data:/var/lib/mysql:Z'
+    networks:
+      - inventory-net
+
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9030:8080
+    networks:
+      - inventory-net
+    
+  app:
+    build:
+      context: https://github.com/TecDevOrg/inventory-htmx-fastapi.git
+      dockerfile: dockerfile  # falls dein Dockerfile anders heißt oder in nem Unterordner liegt, anpassen
+    ports:
+      - "9060:8000"
+#    volumes:
+#      - ./data:/app/data  # falls du lokale Daten persistieren willst
+    environment:
+      DATABASE_URL: "mysql+pymysql://appuser:apppass@db:3306/geraete_db"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - inventory-net
+
+volumes:
+  db_data:
+
+networks:
+  inventory-net:
+    driver: bridge
+
