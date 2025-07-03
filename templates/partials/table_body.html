@@ -1,0 +1,26 @@
+{% if hardware %}
+    {% for row in hardware %}
+    <tr>
+        <td class="id">{{ row.id }}</td>
+        <td class="hostname">{{ row.hostname }}</td>
+        <td class="mac">{{ row.mac }}</td>
+        <td class="ip">{{ row.ip }}</td>
+        <td class="ticket">{{ row.ticket }}</td>
+        <td class="uuid">{{ row.uuid }}</td>
+        <td class="zentrum">{{ row.zentrum }}</td>
+        <td class="seriennumber">{{ row.seriennumber }}</td>
+        <td class="status">{{ row.status }}</td>
+        <td class="enduser">{{ row.enduser }}</td>
+        <td class="admin">{{ row.admin }}</td>
+        <td class="timestamp">{{ row.timestamp }}</td>
+        <td class="actions">
+            <a href="/edit/{{ row.id }}" class="edit-btn" title="Bearbeiten">✏️</a>
+            <form method="post" action="/delete/{{ row.id }}" class="delete-form" onsubmit="return confirm('Willst du diesen Eintrag wirklich löschen?');">
+                <button type="submit" class="delete-btn" title="Löschen">🗑️</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr><td colspan="13" class="no-results">Keine Einträge gefunden.</td></tr>
+{% endif %}

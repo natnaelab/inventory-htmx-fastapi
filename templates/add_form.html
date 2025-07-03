@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Hardware</title>
+</head>
+<body>
+<h2>Add New Hardware Entry</h2>
+
+<form method="post" action="/add">
+    <!-- Felder ohne ID und Timestamp -->
+    {% for field in ["hostname", "mac", "ip", "ticket", "uuid", "zentrum", "seriennumber", "enduser", "admin"] %}
+        <label for="{{ field }}">{{ field|capitalize }}:</label><br>
+        <input type="text" name="{{ field }}" id="{{ field }}"><br><br>
+    {% endfor %}
+
+    <!-- Status als Dropdown -->
+    <label for="status">Status:</label><br>
+    <select name="status" id="status">
+        <option value="Lager">Lager</option>
+        <option value="im Betankungsprozess">im Betankungsprozess</option>
+        <option value="Versendet">Versendet</option>
+    </select><br><br>
+
+    <input type="submit" value="Submit">
+</form>
+
+</body>
+</html>
