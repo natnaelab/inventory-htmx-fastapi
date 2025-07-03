@@ -6,82 +6,106 @@
     <title>Neue Hardware hinzufügen</title>
     <style>
         body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: #f9fafb;
-            margin: 2rem;
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+            width: 400px;
         }
         h2 {
-            margin-bottom: 1rem;
-            color: #2c3e50;
+            margin-bottom: 24px;
+            color: #333;
+            text-align: center;
+            font-weight: 600;
         }
         form {
-            background: #fff;
-            padding: 1.5rem 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
-            max-width: 500px;
+            display: flex;
+            flex-direction: column;
         }
         label {
-            display: block;
-            margin-bottom: 0.3rem;
             font-weight: 600;
+            margin-bottom: 6px;
+            color: #555;
         }
         input[type="text"],
         select {
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            margin-bottom: 1rem;
-            border: 1px solid #ccc;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            border: 1.8px solid #ddd;
             border-radius: 4px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
+            font-size: 14px;
+            transition: border-color 0.3s;
         }
         input[type="text"]:focus,
         select:focus {
             border-color: #0078d7;
             outline: none;
-            box-shadow: 0 0 4px #0078d7aa;
+            box-shadow: 0 0 5px rgba(0, 120, 215, 0.5);
         }
-        input[type="submit"] {
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+        button {
             background-color: #0078d7;
             color: white;
             border: none;
-            padding: 0.6rem 1.2rem;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
             border-radius: 4px;
-            font-size: 1.1rem;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s;
+            user-select: none;
         }
-        input[type="submit"]:hover {
-            background-color: #005ea3;
+        button:hover {
+            background-color: #005a9e;
+        }
+        button[type="button"] {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        button[type="button"]:hover {
+            background-color: #bdbdbd;
+        }
+        a {
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <h2>Neue Hardware hinzufügen</h2>
+    <div class="container">
+        <h2>Neue Hardware hinzufügen</h2>
+        <form method="post" action="/add">
+            {% for field in ["hostname", "mac", "ip", "ticket", "uuid", "zentrum", "seriennumber", "enduser", "admin"] %}
+                <label for="{{ field }}">{{ field|capitalize }}:</label>
+                <input id="{{ field }}" type="text" name="{{ field }}" required />
+            {% endfor %}
 
-    <form method="post" action="/add" novalidate>
-        {% for field in ["hostname", "mac", "ip", "ticket", "uuid", "zentrum", "seriennumber", "enduser", "admin"] %}
-            <label for="{{ field }}">{{ field|capitalize }}:</label>
-            <input
-                type="text"
-                name="{{ field }}"
-                id="{{ field }}"
-                autocomplete="off"
-                required
-                aria-required="true"
-            >
-        {% endfor %}
+            <label for="status">Status:</label>
+            <select id="status" name="status" required>
+                <option value="Lager">Lager</option>
+                <option value="im Betankungsprozess">im Betankungsprozess</option>
+                <option value="Versendet">Versendet</option>
+            </select>
 
-        <label for="status">Status:</label>
-        <select name="status" id="status" required aria-required="true">
-            <option value="LAGER">Lager</option>
-            <option value="BETANKUNG">im Betankungsprozess</option>
-            <option value="VERSENDET">Versendet</option>
-        </select>
-
-        <input type="submit" value="Absenden">
-    </form>
+            <div class="buttons">
+                <button type="submit">💾 Hinzufügen</button>
+                <a href="/"><button type="button">Zurück</button></a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>
