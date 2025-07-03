@@ -213,12 +213,18 @@ def export_excel(db: Session = Depends(get_db)):
 
 # --- Edit Hardware ---
 
+from models import StatusEnum  # falls noch nicht importiert
+
 @app.get("/edit/{hw_id}", response_class=HTMLResponse)
 def edit_form(request: Request, hw_id: int, db: Session = Depends(get_db)):
     hw = db.query(Hardware).get(hw_id)
     if not hw:
         raise HTTPException(status_code=404, detail="Hardware nicht gefunden")
-    return templates.TemplateResponse("edit_form.html", {"request": request, "hw": hw})
+    return templates.TemplateResponse("edit_form.html", {
+        "request": request,
+        "hw": hw,
+        "StatusEnum": StatusEnum  # Hier StatusEnum mitgeben
+    })
 
 @app.post("/edit/{hw_id}")
 def update_entry(
