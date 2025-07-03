@@ -37,15 +37,18 @@
             margin-bottom: 6px;
             color: #555;
         }
-        input[type="text"] {
+        input[type="text"],
+        select {
             padding: 8px 12px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             border: 1.8px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
             transition: border-color 0.3s;
+            font-family: inherit;
         }
-        input[type="text"]:focus {
+        input[type="text"]:focus,
+        select:focus {
             border-color: #0078d7;
             outline: none;
             box-shadow: 0 0 5px rgba(0, 120, 215, 0.5);
@@ -67,6 +70,8 @@
             cursor: pointer;
             transition: background-color 0.3s;
             user-select: none;
+            min-width: 100px;
+            text-align: center;
         }
         button:hover {
             background-color: #005a9e;
@@ -97,35 +102,3 @@
             <input id="ip" type="text" name="ip" value="{{ hw.ip }}" required />
 
             <label for="ticket">Ticket:</label>
-            <input id="ticket" type="text" name="ticket" value="{{ hw.ticket }}" />
-
-            <label for="uuid">UUID:</label>
-            <input id="uuid" type="text" name="uuid" value="{{ hw.uuid }}" />
-
-            <label for="zentrum">Zentrum:</label>
-            <input id="zentrum" type="text" name="zentrum" value="{{ hw.zentrum }}" />
-
-            <label for="seriennumber">Seriennummer:</label>
-            <input id="seriennumber" type="text" name="seriennumber" value="{{ hw.seriennumber }}" />
-
-            <label for="status">Status:</label>
-                <select name="status" id="status" required>
-                {% for status in StatusEnum %}
-                    <option value="{{ status.name }}" {% if hw.status == status %}selected{% endif %}>{{ status.value }}</option>
-                {% endfor %}
-                </select>
-
-            <label for="enduser">Enduser:</label>
-            <input id="enduser" type="text" name="enduser" value="{{ hw.enduser }}" />
-
-            <label for="admin">Admin:</label>
-            <input id="admin" type="text" name="admin" value="{{ hw.admin }}" />
-
-            <div class="buttons">
-                <button type="submit">💾 Speichern</button>
-                <a href="/"><button type="button">Zurück</button></a>
-            </div>
-        </form>
-    </div>
-</body>
-</html>
