@@ -102,3 +102,35 @@
             <input id="ip" type="text" name="ip" value="{{ hw.ip }}" required />
 
             <label for="ticket">Ticket:</label>
+            <input id="ticket" type="text" name="ticket" value="{{ hw.ticket }}" />
+
+            <label for="uuid">UUID:</label>
+            <input id="uuid" type="text" name="uuid" value="{{ hw.uuid }}" />
+
+            <label for="zentrum">Zentrum:</label>
+            <input id="zentrum" type="text" name="zentrum" value="{{ hw.zentrum }}" />
+
+            <label for="seriennumber">Seriennummer:</label>
+            <input id="seriennumber" type="text" name="seriennumber" value="{{ hw.seriennumber }}" />
+
+            <label for="status">Status:</label>
+            <select name="status" id="status" required>
+                {% for status in StatusEnum %}
+                    <option value="{{ status.name }}" {% if hw.status == status %}selected{% endif %}>{{ status.value }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="enduser">Enduser:</label>
+            <input id="enduser" type="text" name="enduser" value="{{ hw.enduser }}" />
+
+            <label for="admin">Admin:</label>
+            <input id="admin" type="text" name="admin" value="{{ hw.admin }}" />
+
+            <div class="buttons">
+                <button type="submit">💾 Speichern</button>
+                <a href="/"><button type="button">Zurück</button></a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
