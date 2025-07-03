@@ -109,7 +109,11 @@
             <input id="seriennumber" type="text" name="seriennumber" value="{{ hw.seriennumber }}" />
 
             <label for="status">Status:</label>
-            <input id="status" type="text" name="status" value="{{ hw.status }}" required />
+                <select name="status" id="status" required>
+                {% for status in StatusEnum %}
+                    <option value="{{ status.name }}" {% if hw.status == status %}selected{% endif %}>{{ status.value }}</option>
+                {% endfor %}
+                </select>
 
             <label for="enduser">Enduser:</label>
             <input id="enduser" type="text" name="enduser" value="{{ hw.enduser }}" />
