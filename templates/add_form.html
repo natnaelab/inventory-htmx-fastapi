@@ -1,28 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-    <title>Add Hardware</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Neue Hardware hinzufügen</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #f9fafb;
+            margin: 2rem;
+            color: #333;
+        }
+        h2 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        form {
+            background: #fff;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+            max-width: 500px;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+        }
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus,
+        select:focus {
+            border-color: #0078d7;
+            outline: none;
+            box-shadow: 0 0 4px #0078d7aa;
+        }
+        input[type="submit"] {
+            background-color: #0078d7;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background-color: #005ea3;
+        }
+    </style>
 </head>
 <body>
-<h2>Add New Hardware Entry</h2>
+    <h2>Neue Hardware hinzufügen</h2>
 
-<form method="post" action="/add">
-    <!-- Felder ohne ID und Timestamp -->
-    {% for field in ["hostname", "mac", "ip", "ticket", "uuid", "zentrum", "seriennumber", "enduser", "admin"] %}
-        <label for="{{ field }}">{{ field|capitalize }}:</label><br>
-        <input type="text" name="{{ field }}" id="{{ field }}"><br><br>
-    {% endfor %}
+    <form method="post" action="/add" novalidate>
+        {% for field in ["hostname", "mac", "ip", "ticket", "uuid", "zentrum", "seriennumber", "enduser", "admin"] %}
+            <label for="{{ field }}">{{ field|capitalize }}:</label>
+            <input
+                type="text"
+                name="{{ field }}"
+                id="{{ field }}"
+                autocomplete="off"
+                required
+                aria-required="true"
+            >
+        {% endfor %}
 
-    <!-- Status als Dropdown -->
-    <label for="status">Status:</label><br>
-    <select name="status" id="status">
-        <option value="Lager">Lager</option>
-        <option value="im Betankungsprozess">im Betankungsprozess</option>
-        <option value="Versendet">Versendet</option>
-    </select><br><br>
+        <label for="status">Status:</label>
+        <select name="status" id="status" required aria-required="true">
+            <option value="LAGER">Lager</option>
+            <option value="BETANKUNG">im Betankungsprozess</option>
+            <option value="VERSENDET">Versendet</option>
+        </select>
 
-    <input type="submit" value="Submit">
-</form>
-
+        <input type="submit" value="Absenden">
+    </form>
 </body>
 </html>
