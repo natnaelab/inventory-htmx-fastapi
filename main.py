@@ -321,3 +321,42 @@ def read_filtered_table(request: Request, status_filter: str, db: Session = Depe
         "filters": {"status": status_filter},
         "title": f"Geräte mit Status: {status_enum.value}"
     })
+
+
+from reportlab.lib.pagesizes import mm
+from reportlab.pdfgen import canvas
+
+@app.get("/label/{hw_id}")
+def generate_label(hw_id: int, db: Session = Depends(get_db)):
+    hw = db.query(Hardware).get(hw_id)
+    if not hw:
+        raise HTTPException(status_code=404, detail="Gerät nicht gefunden")
+
+    buffer = BytesIO()
+
+    # Breite: 63mm, Höhe: automatisch (hier z.B. 40mm)
+    width_mm = 63
+    height_mm = 40
+    c = canvas.Canvas(buffer, pagesize=(width_mm * mm, height_mm * mm))
+
+    # Inhalt: Hostname, MAC, Ticket, Enduser
+    x = 5 * mm
+    y = height_mm * mm - 10 * mm
+    line_height = 6 * mm
+
+    c.setFont("Helvetica", 10)
+    c.drawString(x, y, f"Hostname: {hw.hostname}")
+    y -= line_height
+    c.drawString(x, y, f"MAC: {hw.mac}")
+    y -= line_height
+    c.drawString(x, y, f"Ticket: {hw.ticket or '—'}")
+    y -= line_height
+    c.drawString(x, y, f"User: {hw.enduser or '—'}")
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+
+    return StreamingResponse(buffer, media_type="application/pdf", headers={
+        "Content-Disposition": f"inline; filename=label_{hw.hostname}.pdf"
+    })
