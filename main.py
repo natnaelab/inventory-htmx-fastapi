@@ -211,6 +211,20 @@ def export_excel(db: Session = Depends(get_db)):
                 hw.timestamp.strftime("%Y-%m-%d %H:%M:%S") if hw.timestamp else ""
             ])
 
+        table_ref = f"A1:O{ws.max_row}"
+        display_name = f"Tabelle_{datetime.now().strftime('%Y%m%d%H%M%S')}".replace(":", "_")
+        tab = Table(displayName=display_name, ref=table_ref)
+
+        tab.tableStyleInfo = TableStyleInfo(
+            name="TableStyleMedium9",
+            showFirstColumn=False,
+            showLastColumn=False,
+            showRowStripes=True,
+            showColumnStripes=False,
+        )
+
+        ws.add_table(tab)
+
         output = BytesIO()
         wb.save(output)
         output.seek(0)
