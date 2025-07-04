@@ -193,43 +193,23 @@ def export_excel(db: Session = Depends(get_db)):
                    "SerienNumber", "Status", "Enduser", "Model", "Admin", "Comment", "Timestamp"]
         ws.append(headers)
 
-        def safe_str(value):
-            if value is None:
-                return ""
-            if isinstance(value, Enum):
-                return value.value
-            if isinstance(value, datetime):
-                return value.strftime("%Y-%m-%d %H:%M:%S")
-            return str(value).replace("\x00", "")  # Entferne ungültige Nullbytes
-
         for hw in data:
             ws.append([
-                safe_str(hw.id),
-                safe_str(hw.hostname),
-                safe_str(hw.mac),
-                safe_str(hw.ip),
-                safe_str(hw.ticket),
-                safe_str(hw.uuid),
-                safe_str(hw.zentrum),
-                safe_str(hw.seriennumber),
-                safe_str(hw.status),
-                safe_str(hw.enduser),
-                safe_str(hw.model),
-                safe_str(hw.admin),
-                safe_str(hw.comment),
-                safe_str(hw.timestamp),
+                hw.id,
+                hw.hostname,
+                hw.mac,
+                hw.ip,
+                hw.ticket,
+                hw.uuid,
+                hw.zentrum,
+                hw.seriennumber,
+                hw.status.value if hw.status else "",
+                hw.enduser,
+                hw.model,
+                hw.admin,
+                hw.comment,
+                hw.timestamp.strftime("%Y-%m-%d %H:%M:%S") if hw.timestamp else ""
             ])
-
-            table_ref = f"A1:O{ws.max_row}"
-            display_name = f"HardwareTabelle_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            tab = Table(displayName=display_name, ref=table_ref)
-            tab.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
-            ws.add_table(tab)
-
-
-        for col in ws.columns:
-            max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
-            ws.column_dimensions[col[0].column_letter].width = max_length + 2
 
         output = BytesIO()
         wb.save(output)
@@ -240,10 +220,10 @@ def export_excel(db: Session = Depends(get_db)):
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": "attachment; filename=hardware_export.xlsx"}
         )
-
     except Exception as e:
         logger.exception("Fehler beim Excel-Export")
         raise HTTPException(status_code=500, detail="Fehler beim Excel-Export")
+
 
 @app.get("/edit/{hw_id}", response_class=HTMLResponse)
 def edit_form(request: Request, hw_id: int, db: Session = Depends(get_db)):
