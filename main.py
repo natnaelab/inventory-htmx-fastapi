@@ -189,8 +189,10 @@ def export_excel(db: Session = Depends(get_db)):
         ws = wb.active
         ws.title = "Hardware"
 
-        headers = ["ID", "Hostname", "MAC", "IP", "Ticket", "UUID", "Zentrum",
-                   "SerienNumber", "Status", "Enduser", "Model", "Admin", "Comment", "Timestamp"]
+        headers = [
+            "ID", "Hostname", "MAC", "IP", "Ticket", "UUID", "Zentrum",
+            "Seriennumber", "Status", "Enduser", "Model", "Admin", "Comment", "Timestamp"
+        ]
         ws.append(headers)
 
         for hw in data:
@@ -199,31 +201,38 @@ def export_excel(db: Session = Depends(get_db)):
                 hw.hostname,
                 hw.mac,
                 hw.ip,
-                hw.ticket,
-                hw.uuid,
-                hw.zentrum,
-                hw.seriennumber,
+                hw.ticket or "",
+                hw.uuid or "",
+                hw.zentrum or "",
+                hw.seriennumber or "",
                 hw.status.value if hw.status else "",
-                hw.enduser,
-                hw.model,
-                hw.admin,
-                hw.comment,
+                hw.enduser or "",
+                hw.model or "",
+                hw.admin or "",
+                hw.comment or "",
                 hw.timestamp.strftime("%Y-%m-%d %H:%M:%S") if hw.timestamp else ""
             ])
 
-        table_ref = f"A1:O{ws.max_row}"
-        display_name = f"Tabelle_{datetime.now().strftime('%Y%m%d%H%M%S')}".replace(":", "_")
-        tab = Table(displayName=display_name, ref=table_ref)
+        # Tabelle korrekt definieren – exakte Spaltenbreite (A bis O = 15 Spalten)
+        max_row = ws.max_row
+        table_ref = f"A1:O{max_row}"
+        display_name = f"HardwareTabelle_{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
-        tab.tableStyleInfo = TableStyleInfo(
+        table = Table(displayName=display_name, ref=table_ref)
+        style = TableStyleInfo(
             name="TableStyleMedium9",
             showFirstColumn=False,
             showLastColumn=False,
             showRowStripes=True,
             showColumnStripes=False,
         )
+        table.tableStyleInfo = style
+        ws.add_table(table)
 
-        ws.add_table(tab)
+        # Spaltenbreiten automatisch anpassen
+        for col in ws.columns:
+            max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
+            ws.column_dimensions[col[0].column_letter].width = max_length + 2
 
         output = BytesIO()
         wb.save(output)
@@ -234,6 +243,7 @@ def export_excel(db: Session = Depends(get_db)):
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": "attachment; filename=hardware_export.xlsx"}
         )
+
     except Exception as e:
         logger.exception("Fehler beim Excel-Export")
         raise HTTPException(status_code=500, detail="Fehler beim Excel-Export")
