@@ -370,3 +370,4 @@ def generate_label(hw_id: int, db: Session = Depends(get_db)):
     return StreamingResponse(buffer, media_type="application/pdf", headers={
         "Content-Disposition": f"inline; filename=label_{hw.hostname}.pdf"
     })
+#TEST
