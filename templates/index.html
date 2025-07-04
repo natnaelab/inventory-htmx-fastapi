@@ -231,12 +231,18 @@
     </nav>
 
 
-    <h3>Geräte im Lager pro Modell:</h3>
-        <ul>
+    <div class="my-6">
+    <h3 class="text-lg font-semibold mb-3 text-gray-800">📦 Geräte im Lager nach Modell:</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {% for model, count in model_lager_counter.items() %}
-            <li><strong>{{ model }}</strong>: {{ count }}</li>
+        <div class="bg-white rounded-xl shadow p-4 border border-gray-200">
+            <div class="text-sm text-gray-500">Modell</div>
+            <div class="text-base font-medium text-gray-800">{{ model }}</div>
+            <div class="text-xs mt-2 text-gray-600">Anzahl: <span class="font-semibold">{{ count }}</span></div>
+        </div>
         {% endfor %}
-        </ul>
+    </div>
+    </div>
 <!-- index.html: Spalten wie bisher, keine Kommentar-, Admin- oder Timestamp-Spalte -->
 
     <table>
