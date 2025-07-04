@@ -7,6 +7,7 @@ class StatusEnum(str, enum.Enum):
     RESERVIERT = "RESERVIERT"
     BETANKUNG = "BETANKUNG"
     VERSENDET = "VERSENDET"
+    FEHLER = "FEHLER"
     ABGESCHLOSSEN = "ABGESCHLOSSEN"
 
 class Hardware(Base):
