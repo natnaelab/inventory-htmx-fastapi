@@ -335,9 +335,10 @@ def generate_label(hw_id: int, db: Session = Depends(get_db)):
     buffer = BytesIO()
 
     # Breite: 63mm, Höhe: automatisch (hier z.B. 40mm)
-    width_mm = 63
-    height_mm = 40
-    c = canvas.Canvas(buffer, pagesize=(width_mm * mm, height_mm * mm))
+    from reportlab.lib.pagesizes import landscape
+
+    pagesize = landscape((63 * mm, 40 * mm))
+    c = canvas.Canvas(buffer, pagesize=pagesize)
 
     # Inhalt: Hostname, MAC, Ticket, Enduser
     x = 5 * mm
