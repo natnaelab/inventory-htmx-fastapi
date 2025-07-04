@@ -25,4 +25,6 @@ class Hardware(Base):
 
     enduser = Column(String(255), nullable=True)
     admin = Column(String(255))
+    comment = Column(String(1000), nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
