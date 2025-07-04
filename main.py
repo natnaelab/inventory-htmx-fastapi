@@ -220,10 +220,12 @@ def export_excel(db: Session = Depends(get_db)):
                 safe_str(hw.timestamp),
             ])
 
-        #table_ref = f"A1:O{ws.max_row}"
-        #tab = Table(displayName="HardwareTabelle", ref=table_ref)
-        #tab.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
-        #ws.add_table(tab)
+            table_ref = f"A1:O{ws.max_row}"
+            display_name = f"HardwareTabelle_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            tab = Table(displayName=display_name, ref=table_ref)
+            tab.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
+            ws.add_table(tab)
+
 
         for col in ws.columns:
             max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
