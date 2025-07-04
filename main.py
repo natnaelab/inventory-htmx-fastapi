@@ -215,7 +215,7 @@ def export_excel(db: Session = Depends(get_db)):
 
         # Tabelle korrekt definieren – exakte Spaltenbreite (A bis O = 15 Spalten)
         max_row = ws.max_row
-        table_ref = f"A1:O{max_row}"
+        table_ref = f"A1:N{max_row}"
         display_name = f"HardwareTabelle_{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
         table = Table(displayName=display_name, ref=table_ref)
