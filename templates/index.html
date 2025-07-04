@@ -261,11 +261,9 @@
                 <td data-label="SerienNumber">{{ hw.seriennumber }}</td>
                 <td data-label="Status" id="status-{{ hw.id }}">
                     <button 
-                        hx-post="/update_status/{{ hw.id }}" 
-                        hx-target="#status-{{ hw.id }}" 
-                        hx-swap="outerHTML"
-                        class="status-button"
-                        title="Status ändern">
+                        class="status-button" 
+                        title="Status ändern"
+                        onclick="alert('Button Funktion folgt noch.')">
                         {{ hw.status.value if hw.status else "" }}
                     </button>
                 </td>
