@@ -35,11 +35,31 @@ def get_db():
     finally:
         db.close()
 
+from sqlalchemy import func
+
 @app.get("/", response_class=HTMLResponse)
 def read_table(request: Request, db: Session = Depends(get_db)):
     hw_list = db.query(Hardware).all()
     filters = {"status": ""}
-    return templates.TemplateResponse("index.html", {"request": request, "hardware_list": hw_list, "filters": filters})
+
+    # Zähle Geräte pro Modell im Status 'LAGER'
+    lager_counts = (
+        db.query(Hardware.model, func.count(Hardware.id))
+        .filter(Hardware.status == StatusEnum.LAGER)
+        .group_by(Hardware.model)
+        .all()
+    )
+    model_lager_counter = {model or "Unbekannt": count for model, count in lager_counts}
+
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "hardware_list": hw_list,
+            "filters": filters,
+            "model_lager_counter": model_lager_counter,
+        }
+    )
 
 @app.get("/add", response_class=HTMLResponse)
 def add_form(request: Request):

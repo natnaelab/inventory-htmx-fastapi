@@ -230,6 +230,13 @@
         </button>
     </nav>
 
+
+    <h3>Geräte im Lager pro Modell:</h3>
+        <ul>
+        {% for model, count in model_lager_counter.items() %}
+            <li><strong>{{ model }}</strong>: {{ count }}</li>
+        {% endfor %}
+        </ul>
 <!-- index.html: Spalten wie bisher, keine Kommentar-, Admin- oder Timestamp-Spalte -->
 
     <table>
