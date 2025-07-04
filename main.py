@@ -193,18 +193,36 @@ def export_excel(db: Session = Depends(get_db)):
                    "SerienNumber", "Status", "Enduser", "Model", "Admin", "Comment", "Timestamp"]
         ws.append(headers)
 
+        def safe_str(value):
+            if value is None:
+                return ""
+            if isinstance(value, Enum):
+                return value.value
+            if isinstance(value, datetime):
+                return value.strftime("%Y-%m-%d %H:%M:%S")
+            return str(value).replace("\x00", "")  # Entferne ungültige Nullbytes
+
         for hw in data:
             ws.append([
-                hw.id, hw.hostname, hw.mac, hw.ip, hw.ticket, hw.uuid, hw.zentrum, hw.seriennumber,
-                hw.status.value if hw.status else "",
-                hw.enduser, hw.model, hw.admin, hw.comment,
-                hw.timestamp.strftime("%Y-%m-%d %H:%M:%S") if hw.timestamp else ""
+                safe_str(hw.id),
+                safe_str(hw.hostname),
+                safe_str(hw.mac),
+                safe_str(hw.ip),
+                safe_str(hw.ticket),
+                safe_str(hw.uuid),
+                safe_str(hw.zentrum),
+                safe_str(hw.seriennumber),
+                safe_str(hw.status),
+                safe_str(hw.enduser),
+                safe_str(hw.model),
+                safe_str(hw.admin),
+                safe_str(hw.comment),
+                safe_str(hw.timestamp),
             ])
 
         table_ref = f"A1:O{ws.max_row}"
         tab = Table(displayName="HardwareTabelle", ref=table_ref)
-        style = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
-        tab.tableStyleInfo = style
+        tab.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
         ws.add_table(tab)
 
         for col in ws.columns:
@@ -215,7 +233,12 @@ def export_excel(db: Session = Depends(get_db)):
         wb.save(output)
         output.seek(0)
 
-        return StreamingResponse(output, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=hardware_export.xlsx"})
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=hardware_export.xlsx"}
+        )
+
     except Exception as e:
         logger.exception("Fehler beim Excel-Export")
         raise HTTPException(status_code=500, detail="Fehler beim Excel-Export")
