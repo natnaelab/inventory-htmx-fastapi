@@ -334,16 +334,18 @@ def generate_label(hw_id: int, db: Session = Depends(get_db)):
 
     buffer = BytesIO()
 
-    # Breite: 63mm, Höhe: automatisch (hier z.B. 40mm)
-    from reportlab.lib.pagesizes import landscape
+    from reportlab.lib.pagesizes import mm, landscape
+    from reportlab.pdfgen import canvas
 
-    pagesize = landscape((63 * mm, 40 * mm))
+    buffer = BytesIO()
+
+    pagesize = landscape((63 * mm, 40 * mm))  # Querformat
     c = canvas.Canvas(buffer, pagesize=pagesize)
 
-    # Inhalt: Hostname, MAC, Ticket, Enduser
     x = 5 * mm
-    y = height_mm * mm - 10 * mm
+    y = pagesize[1] - 10 * mm  # beachte: y muss zum Seiten-**höhenwert** passen
     line_height = 6 * mm
+
 
     c.setFont("Helvetica", 10)
     c.drawString(x, y, f"Hostname: {hw.hostname}")
