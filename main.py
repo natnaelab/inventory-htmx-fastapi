@@ -326,6 +326,12 @@ def read_filtered_table(request: Request, status_filter: str, db: Session = Depe
 from reportlab.lib.pagesizes import mm
 from reportlab.pdfgen import canvas
 
+from fastapi.responses import StreamingResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import mm
+from io import BytesIO
+from fastapi import Depends, HTTPException
+
 @app.get("/label/{hw_id}")
 def generate_label(hw_id: int, db: Session = Depends(get_db)):
     hw = db.query(Hardware).get(hw_id)
@@ -334,20 +340,21 @@ def generate_label(hw_id: int, db: Session = Depends(get_db)):
 
     buffer = BytesIO()
 
-    from reportlab.lib.pagesizes import mm, landscape
-    from reportlab.pdfgen import canvas
+    # Match CSS-style page size: 30mm height × 62mm width (landscape)
+    width_mm = 62
+    height_mm = 30
 
-    buffer = BytesIO()
+    page_width = width_mm * mm
+    page_height = height_mm * mm
 
-    pagesize = landscape((63 * mm, 40 * mm))  # Querformat
-    c = canvas.Canvas(buffer, pagesize=pagesize)
+    c = canvas.Canvas(buffer, pagesize=(page_width, page_height))
 
-    x = 5 * mm
-    y = pagesize[1] - 10 * mm  # beachte: y muss zum Seiten-**höhenwert** passen
-    line_height = 6 * mm
+    # Text layout
+    x = 3 * mm
+    y = page_height - 6 * mm
+    line_height = 5 * mm
 
-
-    c.setFont("Helvetica", 10)
+    c.setFont("Helvetica", 8)
     c.drawString(x, y, f"Hostname: {hw.hostname}")
     y -= line_height
     c.drawString(x, y, f"MAC: {hw.mac}")
