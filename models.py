@@ -1,26 +1,28 @@
 from sqlalchemy import Column, Integer, String, Enum, DateTime, func
-from sqlalchemy.ext.declarative import declarative_base
+from database import Base
 import enum
-
-Base = declarative_base()
 
 class StatusEnum(str, enum.Enum):
     LAGER = "LAGER"
+    RESERVIERT = "RESERVIERT"
     BETANKUNG = "BETANKUNG"
     VERSENDET = "VERSENDET"
+    ABGESCHLOSSEN = "ABGESCHLOSSEN"
 
 class Hardware(Base):
     __tablename__ = "hardware"
 
     id = Column(Integer, primary_key=True, index=True)
     hostname = Column(String(255))
-    mac = Column(String(255))
-    ip = Column(String(255))
-    ticket = Column(String(255))
-    uuid = Column(String(255))
-    zentrum = Column(String(255))
+    mac = Column(String(255), nullable=True)
+    ip = Column(String(255), nullable=True)
+    ticket = Column(String(255), nullable=True)
+    uuid = Column(String(255), nullable=True)
+    zentrum = Column(String(255), nullable=True)
     seriennumber = Column(String(255))
+    model = Column(String(255), nullable=True)
     status = Column(Enum(StatusEnum))
-    enduser = Column(String(255))
+
+    enduser = Column(String(255), nullable=True)
     admin = Column(String(255))
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
