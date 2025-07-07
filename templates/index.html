@@ -245,12 +245,6 @@
     <tbody>
       {% for model, count in model_lager_counter.items() %}
       <tr class="border-b border-blue-200 hover:bg-blue-200">
-        <td class="flex items-center px-3 py-2 space-x-3">
-          <div class="w-[50px] h-[50px] bg-blue-300 rounded-sm flex items-center justify-center text-blue-900 font-semibold text-sm flex-shrink-0">
-            {{ model[:2] | upper }}
-          </div>
-          <span class="font-normal">{{ model }}</span>
-        </td>
         <td class="px-3 py-2 font-medium">{{ count }}</td>
       </tr>
       {% endfor %}
