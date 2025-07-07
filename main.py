@@ -403,46 +403,20 @@ def generate_label(hw_id: int, db: Session = Depends(get_db)):
 
 @app.get("/lager_uebersicht", response_class=HTMLResponse)
 def lager_uebersicht(request: Request, db: Session = Depends(get_db)):
-    try:
-        # Alle verschiedenen Modelle mit Seriennummern im Status LAGER abfragen
-        results = (
-            db.query(Hardware.model, Hardware.seriennumber)
-            .filter(Hardware.status == StatusEnum.LAGER)
-            .filter(Hardware.seriennumber.isnot(None))
-            .order_by(Hardware.model, Hardware.seriennumber)
-            .all()
-        )
-        
-        # Modelle und Seriennummern sammeln
-        lager_geraete = {}
-        for model, seriennumber in results:
-            if model not in lager_geraete:
-                lager_geraete[model] = []
-            lager_geraete[model].append(seriennumber)
-        
-        # Alle Modelle aus Enum holen (falls eines gar keine Seriennummern hat)
-        alle_modelle = [m.value for m in ModelEnum]
-        
-        # Sicherstellen, dass alle Modelle im Dict sind, auch wenn leer
-        for model in alle_modelle:
-            if model not in lager_geraete:
-                lager_geraete[model] = []
-        
-        # Maximale Anzahl Seriennummern pro Spalte (für Zeilenanzahl)
-        max_anzahl = max(len(sns) for sns in lager_geraete.values()) if lager_geraete else 0
-        
-        # Seriennummern-Listen auf gleiche Länge bringen (mit None füllen)
-        for model in lager_geraete:
-            diff = max_anzahl - len(lager_geraete[model])
-            if diff > 0:
-                lager_geraete[model].extend([None] * diff)
+    hardware_list = (
+        db.query(Hardware.model, Hardware.seriennumber)
+        .filter(Hardware.status == StatusEnum.LAGER)
+        .order_by(Hardware.model, Hardware.seriennumber)
+        .all()
+    )
 
-        return templates.TemplateResponse("lager_uebersicht.html", {
-            "request": request,
-            "lager_geraete": lager_geraete,
-            "max_anzahl": max_anzahl,
-        })
+    # Gruppieren nach Modell im Python-Code
+    from collections import defaultdict
+    grouped = defaultdict(list)
+    for model, seriennummer in hardware_list:
+        grouped[model].append(seriennummer)
 
-    except Exception as e:
-        logger.error(f"Fehler beim Laden der Lagerübersicht: {e}")
-        raise HTTPException(status_code=500, detail="Fehler bei Lagerübersicht")
+    return templates.TemplateResponse("lager_liste.html", {
+        "request": request,
+        "geräte": grouped  # dict[ModelEnum, List[str]]
+    })
