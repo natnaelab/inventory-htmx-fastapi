@@ -232,18 +232,28 @@
     </nav>
 
 
-    <div class="my-6">
-    <h3 class="text-lg font-semibold mb-3 text-gray-800">📦 Geräte im Lager nach Modell:</h3>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+<div class="my-6">
+  <h3 class="text-lg font-semibold mb-3 text-gray-800">📦 Geräte im Lager nach Modell:</h3>
+
+  <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+    <table class="min-w-full text-sm text-left text-gray-700">
+      <thead class="bg-gray-100 text-xs uppercase text-gray-500 border-b">
+        <tr>
+          <th class="px-4 py-3">Modell</th>
+          <th class="px-4 py-3">Anzahl</th>
+        </tr>
+      </thead>
+      <tbody>
         {% for model, count in model_lager_counter.items() %}
-        <div class="bg-white rounded-xl shadow p-4 border border-gray-200">
-            <div class="text-sm text-gray-500">Modell</div>
-            <div class="text-base font-medium text-gray-800">{{ model }}</div>
-            <div class="text-xs mt-2 text-gray-600">Anzahl: <span class="font-semibold">{{ count }}</span></div>
-        </div>
+        <tr class="hover:bg-gray-50 border-b">
+          <td class="px-4 py-3 font-medium text-gray-900">{{ model }}</td>
+          <td class="px-4 py-3">{{ count }}</td>
+        </tr>
         {% endfor %}
-    </div>
-    </div>
+      </tbody>
+    </table>
+  </div>
+</div>
 <!-- index.html: Spalten wie bisher, keine Kommentar-, Admin- oder Timestamp-Spalte -->
 
     <table>
