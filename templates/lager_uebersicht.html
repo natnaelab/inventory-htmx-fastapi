@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Lager Seriennummern</title>
     <style>
         body {
@@ -21,6 +21,7 @@
             border: 1px solid #cbd5e1;
             padding: 10px;
             text-align: left;
+            white-space: nowrap;
         }
         th {
             background-color: #e0e7ff;
@@ -36,21 +37,20 @@
     <h1>Seriennummern im Lager</h1>
 
     {% for model, seriennummern in lager_geraete.items() %}
-        <h2>{{ model }}</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Seriennummer</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for sn in seriennummern %}
-                    <tr><td>{{ sn }}</td></tr>
-                {% else %}
-                    <tr><td>Keine Einträge</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <h2>{{ model }} ({{ seriennummern|length }})</h2>
+        {% if seriennummern %}
+            <table>
+                <thead>
+                    <tr>
+                        {% for sn in seriennummern %}
+                            <th>{{ sn }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+            </table>
+        {% else %}
+            <p>Keine Einträge</p>
+        {% endif %}
     {% endfor %}
 
 </body>
