@@ -232,19 +232,19 @@
     </nav>
 
 
-<div class="my-6 mx-auto bg-blue-50 border border-blue-200 rounded-lg shadow-sm p-4 max-w-sm">
-  <h3 class="text-sm font-semibold mb-3 text-blue-700">📦 Geräte im Lager nach Modell:</h3>
+<div class="my-6 mx-auto bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-4 max-w-sm">
+  <h3 class="text-sm font-semibold mb-3 text-gray-700">📦 Geräte im Lager nach Modell:</h3>
 
-  <table class="table-auto text-xs text-blue-900 mx-auto" style="width: max-content; min-width: 200px;">
+  <table class="table-auto text-xs text-gray-900 mx-auto" style="width: max-content; min-width: 200px;">
     <thead>
-      <tr class="bg-gray-200">
+      <tr class="bg-gray-700 text-white">
         <th class="px-3 py-1 text-left rounded-tl-md">Modell</th>
         <th class="px-3 py-1 text-left rounded-tr-md">Anzahl</th>
       </tr>
     </thead>
     <tbody>
       {% for model, count in model_lager_counter.items() %}
-      <tr class="border-b border-blue-200 hover:bg-blue-200">
+      <tr class="border-b border-gray-200 hover:bg-gray-100">
         <td class="px-3 py-2 font-normal">{{ model }}</td>
         <td class="px-3 py-2 font-medium">{{ count }}</td>
       </tr>
@@ -252,6 +252,8 @@
     </tbody>
   </table>
 </div>
+
+
 
 
 
