@@ -10,6 +10,16 @@ class StatusEnum(str, enum.Enum):
     FEHLER = "FEHLER"
     ABGESCHLOSSEN = "ABGESCHLOSSEN"
 
+class ModelEnum(str, enum.Enum):
+    NOTEBOOKS = "Notebooks"
+    MFF = "MFF"
+    ALL_IN_ONE = "All-In-One"
+    SCANNER = "Scanner"
+    DRUCKER = "Drucker"
+    MULTIFUNKTIONSDRUCKER = "Multifunktionsdrucker"
+    ZUFUHRFACH = "Zufuhrfach"
+    IPHONE = "iPhone"
+
 class Hardware(Base):
     __tablename__ = "hardware"
 
@@ -21,7 +31,7 @@ class Hardware(Base):
     uuid = Column(String(255), nullable=True)
     zentrum = Column(String(255), nullable=True)
     seriennumber = Column(String(255))
-    model = Column(String(255), nullable=True)
+    model = Column(Enum(ModelEnum))
     status = Column(Enum(StatusEnum))
 
     enduser = Column(String(255), nullable=True)

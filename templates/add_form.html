@@ -118,6 +118,13 @@
             <label for="seriennumber">Seriennummer:</label>
             <input id="seriennumber" type="text" name="seriennumber" />
 
+            <label for="model">Model:</label>
+            <select name="model" id="model" required>
+                {% for model in ModelEnum %}
+                    <option value="{{ model.name }}">{{ model.value }}</option>
+                {% endfor %}
+            </select>
+
             <label for="status">Status:</label>
             <select name="status" id="status" required>
                 {% for status in StatusEnum %}

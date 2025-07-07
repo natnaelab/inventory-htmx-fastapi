@@ -13,7 +13,8 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 import logging
 
 from database import SessionLocal, engine
-from models import Hardware, Base, StatusEnum
+from models import Hardware, Base, StatusEnum, ModelEnum
+
 
 # Logging konfigurieren
 logging.basicConfig(level=logging.INFO)
@@ -63,29 +64,53 @@ def read_table(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/add", response_class=HTMLResponse)
 def add_form(request: Request):
-    return templates.TemplateResponse("add_form.html", {"request": request, "StatusEnum": StatusEnum})
+    return templates.TemplateResponse("add_form.html", {
+        "request": request,
+        "StatusEnum": StatusEnum,
+        "ModelEnum": ModelEnum
+    })
 
 @app.post("/add", response_class=HTMLResponse)
 def add_entry(
     request: Request,
     hostname: str = Form(...), mac: str = Form(...), ip: str = Form(...),
     ticket: str = Form(None), uuid: str = Form(None), zentrum: str = Form(None), seriennumber: str = Form(None),
-    status: str = Form(...), enduser: str = Form(None), model: str = Form(None), admin: str = Form(None), comment: str = Form(None),
+    status: str = Form(...), enduser: str = Form(None), model: str = Form(...), admin: str = Form(None), comment: str = Form(None),
     db: Session = Depends(get_db),
 ):
     try:
         hw = Hardware(
-            hostname=hostname, mac=mac, ip=ip, ticket=ticket, uuid=uuid, zentrum=zentrum, seriennumber=seriennumber,
-            status=StatusEnum(status.upper()), enduser=enduser, model=model, admin=admin, comment=comment,
+            hostname=hostname,
+            mac=mac,
+            ip=ip,
+            ticket=ticket,
+            uuid=uuid,
+            zentrum=zentrum,
+            seriennumber=seriennumber,
+            status=StatusEnum(status),  # Kein `.upper()` nötig bei korrektem HTML
+            model=ModelEnum(model),
+            enduser=enduser,
+            admin=admin,
+            comment=comment,
             timestamp=datetime.utcnow()
         )
         db.add(hw)
         db.commit()
     except ValueError:
-        return templates.TemplateResponse("add_form.html", {"request": request, "error": f"Ungültiger Statuswert: {status}", "StatusEnum": StatusEnum})
+        return templates.TemplateResponse("add_form.html", {
+            "request": request,
+            "error": f"Ungültiger Status oder Modellwert: {status}, {model}",
+            "StatusEnum": StatusEnum,
+            "ModelEnum": ModelEnum
+        })
     except IntegrityError:
         db.rollback()
-        return templates.TemplateResponse("add_form.html", {"request": request, "error": "Fehler: Ungültige Daten oder Duplikat", "StatusEnum": StatusEnum})
+        return templates.TemplateResponse("add_form.html", {
+            "request": request,
+            "error": "Fehler: Ungültige Daten oder Duplikat",
+            "StatusEnum": StatusEnum,
+            "ModelEnum": ModelEnum
+        })
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"DB-Fehler: {e}")
