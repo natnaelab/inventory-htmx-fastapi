@@ -404,24 +404,43 @@ def generate_label(hw_id: int, db: Session = Depends(get_db)):
 @app.get("/lager_uebersicht", response_class=HTMLResponse)
 def lager_uebersicht(request: Request, db: Session = Depends(get_db)):
     try:
-        # Gefiltert nach Status=LAGER und Gerätenamen
-        device_types = ["Notebook", "All-In-One", "MFF"]
-        results = {}
-
-        for device_type in device_types:
-            serien = (
-                db.query(Hardware.seriennumber)
-                .filter(Hardware.status == StatusEnum.LAGER, Hardware.model == device_type)
-                .filter(Hardware.seriennumber.isnot(None))
-                .order_by(Hardware.seriennumber)
-                .all()
-            )
-            # Seriennummern extrahieren und leere ignorieren
-            results[device_type] = [s[0] for s in serien if s[0]]
+        # Alle verschiedenen Modelle mit Seriennummern im Status LAGER abfragen
+        results = (
+            db.query(Hardware.model, Hardware.seriennumber)
+            .filter(Hardware.status == StatusEnum.LAGER)
+            .filter(Hardware.seriennumber.isnot(None))
+            .order_by(Hardware.model, Hardware.seriennumber)
+            .all()
+        )
+        
+        # Modelle und Seriennummern sammeln
+        lager_geraete = {}
+        for model, seriennumber in results:
+            if model not in lager_geraete:
+                lager_geraete[model] = []
+            lager_geraete[model].append(seriennumber)
+        
+        # Alle Modelle aus Enum holen (falls eines gar keine Seriennummern hat)
+        alle_modelle = [m.value for m in ModelEnum]
+        
+        # Sicherstellen, dass alle Modelle im Dict sind, auch wenn leer
+        for model in alle_modelle:
+            if model not in lager_geraete:
+                lager_geraete[model] = []
+        
+        # Maximale Anzahl Seriennummern pro Spalte (für Zeilenanzahl)
+        max_anzahl = max(len(sns) for sns in lager_geraete.values()) if lager_geraete else 0
+        
+        # Seriennummern-Listen auf gleiche Länge bringen (mit None füllen)
+        for model in lager_geraete:
+            diff = max_anzahl - len(lager_geraete[model])
+            if diff > 0:
+                lager_geraete[model].extend([None] * diff)
 
         return templates.TemplateResponse("lager_uebersicht.html", {
             "request": request,
-            "lager_geraete": results
+            "lager_geraete": lager_geraete,
+            "max_anzahl": max_anzahl,
         })
 
     except Exception as e:

@@ -9,7 +9,7 @@
             margin: 40px;
             background-color: #f9fafb;
         }
-        h2 {
+        h1 {
             color: #1f2937;
         }
         table {
@@ -36,22 +36,24 @@
 
     <h1>Seriennummern im Lager</h1>
 
-    {% for model, seriennummern in lager_geraete.items() %}
-        <h2>{{ model }} ({{ seriennummern|length }})</h2>
-        {% if seriennummern %}
-            <table>
-                <thead>
-                    <tr>
-                        {% for sn in seriennummern %}
-                            <th>{{ sn }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-            </table>
-        {% else %}
-            <p>Keine Einträge</p>
-        {% endif %}
-    {% endfor %}
+    <table>
+        <thead>
+            <tr>
+                {% for model, seriennummern in lager_geraete.items() %}
+                    <th>{{ model }} ({{ seriennummern|select('string')|reject('equalto', None)|list|length }})</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in range(max_anzahl) %}
+                <tr>
+                    {% for seriennummern in lager_geraete.values() %}
+                        <td>{{ seriennummern[i] if seriennummern[i] else "" }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
 </body>
 </html>
