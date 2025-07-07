@@ -13,7 +13,7 @@ class StatusEnum(str, enum.Enum):
 class ModelEnum(str, enum.Enum):
     NOTEBOOKS = "Notebook"
     MFF = "MFF"
-    ALL_IN_ONE = "All-In-One"
+    ALL-IN-ONE = "All-In-One"
     SCANNER = "Scanner"
     DRUCKER = "Drucker"
     MULTIFUNKTIONSDRUCKER = "Multifunktionsdrucker"
