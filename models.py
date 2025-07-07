@@ -10,15 +10,16 @@ class StatusEnum(str, enum.Enum):
     FEHLER = "FEHLER"
     ABGESCHLOSSEN = "ABGESCHLOSSEN"
 
-class ModelEnum(str, enum.Enum):
-    NOTEBOOK = "Notebook"
+
+class ModelEnum(str, Enum):
+    Notebook = "Notebook"
     MFF = "MFF"
-    ALL-IN-ONE = "All-In-One"
-    SCANNER = "Scanner"
-    DRUCKER = "Drucker"
-    MULTIFUNKTIONSDRUCKER = "Multifunktionsdrucker"
-    ZUFUHRFACH = "Zufuhrfach"
-    IPHONE = "iPhone"
+    All_In_One = "All-In-One"
+    Scanner = "Scanner"
+    Drucker = "Drucker"
+    Multifunktionsdrucker = "Multifunktionsdrucker"
+    Zufuhrfach = "Zufuhrfach"
+    iPhone = "iPhone"
 
 class Hardware(Base):
     __tablename__ = "hardware"
