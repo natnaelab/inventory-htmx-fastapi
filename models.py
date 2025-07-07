@@ -21,6 +21,7 @@ class ModelEnum(str, enum.Enum):
     iPhone = "iPhone"
     Backpack = "Backpack"
     Dockingstation = "Dockingstation"
+    Monitor = "Monitor"
 
 class Hardware(Base):
     __tablename__ = "hardware"
