@@ -404,7 +404,6 @@ def generate_label(hw_id: int, db: Session = Depends(get_db)):
 @app.get("/lager_uebersicht", response_class=HTMLResponse)
 def lager_uebersicht(request: Request, db: Session = Depends(get_db)):
     try:
-        # Alle verschiedenen Modelle mit Seriennummern im Status LAGER abfragen
         results = (
             db.query(Hardware.model, Hardware.seriennumber)
             .filter(Hardware.status == StatusEnum.LAGER)
@@ -412,26 +411,15 @@ def lager_uebersicht(request: Request, db: Session = Depends(get_db)):
             .order_by(Hardware.model, Hardware.seriennumber)
             .all()
         )
-        
-        # Modelle und Seriennummern sammeln
-        lager_geraete = {}
+
+        alle_modelle = list(ModelEnum)  # Enum-Objekte
+
+        lager_geraete = {m: [] for m in alle_modelle}
         for model, seriennumber in results:
-            if model not in lager_geraete:
-                lager_geraete[model] = []
             lager_geraete[model].append(seriennumber)
-        
-        # Alle Modelle aus Enum holen (falls eines gar keine Seriennummern hat)
-        alle_modelle = [m.value for m in ModelEnum]
-        
-        # Sicherstellen, dass alle Modelle im Dict sind, auch wenn leer
-        for model in alle_modelle:
-            if model not in lager_geraete:
-                lager_geraete[model] = []
-        
-        # Maximale Anzahl Seriennummern pro Spalte (für Zeilenanzahl)
+
         max_anzahl = max(len(sns) for sns in lager_geraete.values()) if lager_geraete else 0
-        
-        # Seriennummern-Listen auf gleiche Länge bringen (mit None füllen)
+
         for model in lager_geraete:
             diff = max_anzahl - len(lager_geraete[model])
             if diff > 0:
@@ -446,5 +434,3 @@ def lager_uebersicht(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Fehler beim Laden der Lagerübersicht: {e}")
         raise HTTPException(status_code=500, detail="Fehler bei Lagerübersicht")
-    
-
