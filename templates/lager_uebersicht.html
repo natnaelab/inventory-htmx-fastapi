@@ -50,7 +50,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>{{ model }} ({{ seriennummern|select('string')|reject('equalto', None)|list|length }})</th>
+                        <th>{{ model.value }} ({{ seriennummern|select('string')|reject('equalto', None)|list|length }})</th>
                     </tr>
                 </thead>
                 <tbody>
