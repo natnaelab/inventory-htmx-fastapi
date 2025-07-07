@@ -11,7 +11,7 @@ class StatusEnum(str, enum.Enum):
     ABGESCHLOSSEN = "ABGESCHLOSSEN"
 
 class ModelEnum(str, enum.Enum):
-    NOTEBOOKS = "Notebook"
+    NOTEBOOK = "Notebook"
     MFF = "MFF"
     ALL-IN-ONE = "All-In-One"
     SCANNER = "Scanner"
