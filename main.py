@@ -279,7 +279,12 @@ def edit_form(request: Request, hw_id: int, db: Session = Depends(get_db)):
     hw = db.query(Hardware).get(hw_id)
     if not hw:
         raise HTTPException(status_code=404, detail="Hardware nicht gefunden")
-    return templates.TemplateResponse("edit_form.html", {"request": request, "hw": hw, "StatusEnum": StatusEnum})
+    return templates.TemplateResponse("edit_form.html", {
+    "request": request,
+    "hw": hw,
+    "StatusEnum": StatusEnum,
+    "ModelEnum": ModelEnum  # <-- Hier hinzufügen
+})
 
 @app.post("/edit/{hw_id}")
 def update_entry(
