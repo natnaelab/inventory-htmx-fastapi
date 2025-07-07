@@ -232,28 +232,30 @@
     </nav>
 
 
-<div class="my-6">
-  <h3 class="text-lg font-semibold mb-3 text-gray-800">📦 Geräte im Lager nach Modell:</h3>
+<div class="my-4 max-w-md">
+  <h3 class="text-md font-semibold mb-2 text-gray-700">📦 Geräte im Lager nach Modell:</h3>
 
-  <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
-    <table class="min-w-full text-sm text-left text-gray-700">
-      <thead class="bg-gray-100 text-xs uppercase text-gray-500 border-b">
-        <tr>
-          <th class="px-4 py-3">Modell</th>
-          <th class="px-4 py-3">Anzahl</th>
+  <div class="bg-gray-50 rounded-md border border-gray-200 shadow-sm overflow-x-auto">
+    <table class="min-w-full text-xs text-gray-600">
+      <thead>
+        <tr class="bg-gray-100 text-gray-500">
+          <th class="px-3 py-2 text-left">Modell</th>
+          <th class="px-3 py-2 text-left">Anzahl</th>
         </tr>
       </thead>
       <tbody>
         {% for model, count in model_lager_counter.items() %}
-        <tr class="hover:bg-gray-50 border-b">
-          <td class="px-4 py-3 font-medium text-gray-900">{{ model }}</td>
-          <td class="px-4 py-3">{{ count }}</td>
+        <tr class="hover:bg-gray-100 border-b border-gray-200">
+          <td class="px-3 py-1 font-normal">{{ model }}</td>
+          <td class="px-3 py-1">{{ count }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
+
+
 <!-- index.html: Spalten wie bisher, keine Kommentar-, Admin- oder Timestamp-Spalte -->
 
     <table>
