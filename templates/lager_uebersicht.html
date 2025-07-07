@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Lager Seriennummern</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 40px;
+            background-color: #f9fafb;
+        }
+        h2 {
+            color: #1f2937;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #e0e7ff;
+            color: #1e3a8a;
+        }
+        td {
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Seriennummern im Lager</h1>
+
+    {% for model, seriennummern in lager_geraete.items() %}
+        <h2>{{ model }}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Seriennummer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sn in seriennummern %}
+                    <tr><td>{{ sn }}</td></tr>
+                {% else %}
+                    <tr><td>Keine Einträge</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
+
+</body>
+</html>

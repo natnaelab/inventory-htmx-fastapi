@@ -370,4 +370,30 @@ def generate_label(hw_id: int, db: Session = Depends(get_db)):
     return StreamingResponse(buffer, media_type="application/pdf", headers={
         "Content-Disposition": f"inline; filename=label_{hw.hostname}.pdf"
     })
-#TEST
+
+@app.get("/lager_uebersicht", response_class=HTMLResponse)
+def lager_uebersicht(request: Request, db: Session = Depends(get_db)):
+    try:
+        # Gefiltert nach Status=LAGER und Gerätenamen
+        device_types = ["Notebook", "All-In-One", "MFF"]
+        results = {}
+
+        for device_type in device_types:
+            serien = (
+                db.query(Hardware.seriennumber)
+                .filter(Hardware.status == StatusEnum.LAGER, Hardware.model == device_type)
+                .filter(Hardware.seriennumber.isnot(None))
+                .order_by(Hardware.seriennumber)
+                .all()
+            )
+            # Seriennummern extrahieren und leere ignorieren
+            results[device_type] = [s[0] for s in serien if s[0]]
+
+        return templates.TemplateResponse("lager_uebersicht.html", {
+            "request": request,
+            "lager_geraete": results
+        })
+
+    except Exception as e:
+        logger.error(f"Fehler beim Laden der Lagerübersicht: {e}")
+        raise HTTPException(status_code=500, detail="Fehler bei Lagerübersicht")
