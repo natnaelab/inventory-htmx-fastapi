@@ -10,8 +10,7 @@ class StatusEnum(str, enum.Enum):
     FEHLER = "FEHLER"
     ABGESCHLOSSEN = "ABGESCHLOSSEN"
 
-
-class ModelEnum(str, Enum):
+class ModelEnum(str, enum.Enum):
     Notebook = "Notebook"
     MFF = "MFF"
     All_In_One = "All-In-One"
