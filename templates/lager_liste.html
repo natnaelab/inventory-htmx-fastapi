@@ -1,0 +1,10 @@
+<h2>Geräte im Lager (nach Modell)</h2>
+
+{% for model, seriennummern in geräte.items() %}
+  <h3>{{ model }}</h3>
+  <ul>
+    {% for sn in seriennummern %}
+      <li>{{ sn }}</li>
+    {% endfor %}
+  </ul>
+{% endfor %}

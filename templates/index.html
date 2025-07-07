@@ -215,6 +215,14 @@
     <h2>{{ title if title else "Hardware Overview" }}</h2>
     <a href="/export" class="export-btn">⬇️ Excel Export</a>
     <a class="export-btn" href="/lager_uebersicht">📋 Lagerübersicht anzeigen</a>
+    <button 
+        hx-get="/lager_uebersicht"
+        hx-target="#lager-container"
+        hx-swap="innerHTML">
+        Lagergeräte anzeigen
+    </button>
+
+<div id="lager-container"></div>
 
     <p id="row-count"><strong>Rows:</strong> {{ hardware_list|length }}</p>
     <nav style="background-color:#007acc; padding:10px; color:white; font-family: Arial, sans-serif; display: flex; align-items: center;">
