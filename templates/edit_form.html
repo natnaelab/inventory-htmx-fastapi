@@ -122,7 +122,7 @@
             <label for="modell">Modell:</label>
             <select name="modell" id="modell" required>
                 {% for model in ModelEnum %}
-                    <option value="{{ model.name }}" {% if hw.modell == model %}selected{% endif %}>{{ model.value }}</option>
+                    <option value="{{ model.name }}" {% if hw.model == model %}selected{% endif %}>{{ model.value }}</option>
                 {% endfor %}
             </select>
 
