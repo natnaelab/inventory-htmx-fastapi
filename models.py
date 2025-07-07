@@ -31,11 +31,11 @@ class Hardware(Base):
     uuid = Column(String(255), nullable=True)
     zentrum = Column(String(255), nullable=True)
     seriennumber = Column(String(255))
-    model = Column(Enum(ModelEnum))
-    status = Column(Enum(StatusEnum))
+
+    model = Column(Enum(ModelEnum, native_enum=False))  # ✅ Das ist wichtig
+    status = Column(Enum(StatusEnum, native_enum=False))  # ✅ Ebenfalls wichtig
 
     enduser = Column(String(255), nullable=True)
     admin = Column(String(255))
     comment = Column(String(1000), nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
-
