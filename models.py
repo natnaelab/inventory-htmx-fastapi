@@ -19,6 +19,8 @@ class ModelEnum(str, enum.Enum):
     Multifunktionsdrucker = "Multifunktionsdrucker"
     Zufuhrfach = "Zufuhrfach"
     iPhone = "iPhone"
+    Backpack = "Backpack"
+    Dockingstation = "Dockingstation"
 
 class Hardware(Base):
     __tablename__ = "hardware"
