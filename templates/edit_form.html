@@ -120,9 +120,9 @@
             <input id="seriennumber" type="text" name="seriennumber" value="{{ hw.seriennumber }}" />
 
             <label for="modell">Modell:</label>
-            <select name="modell" id="modell" required>
+            <select id="modell" name="modell" required>
                 {% for model in ModelEnum %}
-                    <option value="{{ model.name }}" {% if hw.model == model %}selected{% endif %}>{{ model.value }}</option>
+                    <option value="{{ model.value }}" {% if hw.modell == model.value %}selected{% endif %}>{{ model.value }}</option>
                 {% endfor %}
             </select>
 
