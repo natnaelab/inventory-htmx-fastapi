@@ -192,6 +192,21 @@
                 position: static;
                 padding: 0;
             }
+            .mini-table {
+                width: auto !important;
+                background-color: transparent;
+                box-shadow: none;
+                border-radius: 0;
+                border-collapse: collapse;
+                border-spacing: 0;
+            }
+            .mini-table thead tr {
+                background-color: #374151; /* dunkelgrau */
+                color: white;
+            }
+            .mini-table tbody tr:hover {
+                background-color: #f3f4f6; /* hellgrau hover */
+            }
         }
     </style>
 </head>
@@ -235,7 +250,7 @@
 <div class="my-6 mx-auto bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-4 max-w-sm">
   <h3 class="text-sm font-semibold mb-3 text-gray-700">📦 Geräte im Lager nach Modell:</h3>
 
-  <table class="table-auto text-xs text-gray-900 mx-auto" style="width: max-content; min-width: 200px;">
+ <table class="mini-table table-auto text-xs text-gray-900 mx-auto" style="min-width: 200px;">
     <thead>
       <tr class="bg-gray-700 text-white">
         <th class="px-3 py-1 text-left rounded-tl-md">Modell</th>
