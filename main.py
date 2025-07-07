@@ -283,7 +283,7 @@ def edit_form(request: Request, hw_id: int, db: Session = Depends(get_db)):
     "request": request,
     "hw": hw,
     "StatusEnum": StatusEnum,
-    "ModelEnum": ModelEnum  # <-- Hier hinzufügen
+    "ModelEnum": ModelEnum 
 })
 
 @app.post("/edit/{hw_id}")
