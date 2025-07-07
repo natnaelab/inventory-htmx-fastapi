@@ -225,7 +225,7 @@
             style="background:none; border:none; color:white; margin-right:15px; font-weight:bold; cursor:pointer; font-size:1rem;">
             Alle Geräte
         </button>
-        <button 
+        <!-- <button 
             onclick="location.href='/status/lager'" 
             style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
             Im Lager
@@ -239,7 +239,7 @@
             onclick="location.href='/status/versendet'" 
             style="background:none; border:none; color:white; margin-right:15px; cursor:pointer; font-size:1rem;">
             Versendet
-        </button>
+        </button> -->
         
         <button 
             onclick="location.href='/add'" 
@@ -247,33 +247,6 @@
             Neues Gerät
         </button>
     </nav>
-
-
-<div class="my-6 mx-auto bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-4 max-w-sm">
-  <h3 class="text-sm font-semibold mb-3 text-gray-700">📦 Geräte im Lager nach Modell:</h3>
-
- <table class="mini-table table-auto text-xs text-gray-900 mx-auto" style="min-width: 200px;">
-    <thead>
-      <tr class="bg-gray-700 text-white">
-        <th class="px-3 py-1 text-left rounded-tl-md">Modell</th>
-        <th class="px-3 py-1 text-left rounded-tr-md">Anzahl</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for model, count in model_lager_counter.items() %}
-      <tr class="border-b border-gray-200 hover:bg-gray-100">
-        <td class="px-3 py-2 font-normal">{{ model }}</td>
-        <td class="px-3 py-2 font-medium">{{ count }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-
-
-
-
 
 
 
