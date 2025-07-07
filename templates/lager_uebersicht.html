@@ -12,16 +12,25 @@
         h1 {
             color: #1f2937;
         }
+        .tables-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
         table {
             border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 40px;
+            width: 250px; /* Feste Breite pro Tabelle, passt ggf. an */
+            margin-bottom: 20px;
+            table-layout: fixed;
+            word-wrap: break-word;
         }
         th, td {
             border: 1px solid #cbd5e1;
             padding: 10px;
             text-align: left;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         th {
             background-color: #e0e7ff;
@@ -36,25 +45,29 @@
 
     <h1>Seriennummern im Lager</h1>
 
-    <table>
-        <thead>
-            <tr>
-                {% for model, seriennummern in lager_geraete.items() %}
-                    {% set count = seriennummern | select('string') | reject('equalto', None) | list | length %}
-                    <th>{{ model.value }} ({{ count }})</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for i in range(max_anzahl) %}
-                <tr>
-                    {% for seriennummern in lager_geraete.values() %}
-                        <td>{{ seriennummern[i] if seriennummern[i] else "" }}</td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="tables-wrapper">
+        {% for model, seriennummern in lager_geraete.items() %}
+            <table>
+                <thead>
+                    <tr>
+                        {% for model, seriennummern in lager_geraete.items() %}
+                            {% set count = seriennummern | select('string') | reject('equalto', None) | list | length %}
+                            <th>{{ model.value if model else 'Unbekannt' }} ({{ count }})</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if seriennummern|length > 0 %}
+                        {% for sn in seriennummern %}
+                            <tr><td>{{ sn }}</td></tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td>Keine Einträge</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        {% endfor %}
+    </div>
 
 </body>
 </html>
