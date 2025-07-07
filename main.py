@@ -155,20 +155,20 @@ def update_status(hw_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Fehler beim Statusupdate")
 
 class HardwareCreate(BaseModel):
-    id: int
-    hostname: str
-    mac: str
-    ip: str
+    id: int = None
+    hostname: str = None
+    mac: str = None
+    ip: str = None
     ticket: str = None
     uuid: str = None
     zentrum: str = None
-    seriennumber: str = None
-    status: str
+    seriennumber: str
+    status: str = None
     enduser: str = None
     model: str = None
     admin: str = None
     comment: str = None
-    timestamp: str
+    timestamp: str = None
 
 @app.post("/api/hardware")
 def api_add_entry(data: HardwareCreate, db: Session = Depends(get_db)):
