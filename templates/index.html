@@ -245,6 +245,7 @@
     <tbody>
       {% for model, count in model_lager_counter.items() %}
       <tr class="border-b border-blue-200 hover:bg-blue-200">
+        <td class="px-3 py-2 font-normal">{{ model }}</td>
         <td class="px-3 py-2 font-medium">{{ count }}</td>
       </tr>
       {% endfor %}
