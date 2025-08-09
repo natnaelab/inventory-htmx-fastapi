@@ -1,0 +1,98 @@
+<!-- Statistics Cards -->
+<div id="stats-container" class="row g-4 mb-4">
+<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+    <div class="card stat-card border-primary h-100">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon-wrapper bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                    <i class="fas fa-laptop fa-lg text-primary"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <h3 class="fw-bold mb-0 text-primary">{{ total_count or 0 }}</h3>
+                    <small class="text-muted fw-medium">Total Devices</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+    <div class="card stat-card border-success h-100">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon-wrapper bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                    <i class="fas fa-warehouse fa-lg text-success"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <h3 class="fw-bold mb-0 text-success">{{ status_counts.IN_STOCK or 0 }}</h3>
+                    <small class="text-muted fw-medium">In Stock</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+    <div class="card stat-card border-warning h-100">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon-wrapper bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                    <i class="fas fa-clock fa-lg text-warning"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <h3 class="fw-bold mb-0 text-warning">{{ status_counts.RESERVED or 0 }}</h3>
+                    <small class="text-muted fw-medium">Reserved</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+    <div class="card stat-card border-info h-100">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon-wrapper bg-info bg-opacity-10 rounded-3 p-3 me-3">
+                    <i class="fas fa-cog fa-lg text-info"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <h3 class="fw-bold mb-0 text-info">{{ status_counts.IMAGING or 0 }}</h3>
+                    <small class="text-muted fw-medium">Imaging</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+    <div class="card stat-card border-purple h-100">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon-wrapper bg-purple bg-opacity-10 rounded-3 p-3 me-3">
+                    <i class="fas fa-shipping-fast fa-lg text-purple"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <h3 class="fw-bold mb-0 text-purple">{{ status_counts.SHIPPED or 0 }}</h3>
+                    <small class="text-muted fw-medium">Shipped</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+    <div class="card stat-card border-secondary h-100">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon-wrapper bg-secondary bg-opacity-10 rounded-3 p-3 me-3">
+                    <i class="fas fa-check-circle fa-lg text-secondary"></i>
+                </div>
+                <div class="ms-auto text-end">
+                    <h3 class="fw-bold mb-0 text-secondary">{{ status_counts.COMPLETED or 0 }}</h3>
+                    <small class="text-muted fw-medium">Completed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
