@@ -1,0 +1,322 @@
+<!-- Mobile Card View for Hardware Items -->
+<div class="row g-3" id="hardware-mobile-cards">
+    {% for hw in hardware_list %}
+    <div class="col-12">
+        <div class="card hardware-card shadow-custom" data-hw-id="{{ hw.id }}">
+            <div class="card-body p-3">
+                <!-- Header Row -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1">
+                        <h6 class="card-title mb-1 text-primary fw-semibold">
+                            {{ hw.hostname or 'Unknown Device' }}
+                        </h6>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            {% set model_icons = {
+                                'Notebook': 'fas fa-laptop',
+                                'MFF': 'fas fa-desktop',
+                                'AllInOne': 'fas fa-desktop',
+                                'Backpack': 'fas fa-backpack',
+                                'DockingStation': 'fas fa-plug',
+                                'Monitor': 'fas fa-tv'
+                            } %}
+                            <i class="{{ model_icons.get(hw.model.value if hw.model else '', 'fas fa-question') }} text-muted"></i>
+                            <span class="small text-muted">{{ hw.model.value if hw.model else 'Unknown' }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Badge -->
+                    <button type="button" 
+                            class="status-pill status-{{ (hw.status.value|lower).replace('_','-') if hw.status else 'unknown' }}" 
+                            style="border: none; background: transparent;">
+                        <span class="status-badge status-{{ (hw.status.value|lower).replace('_','-') if hw.status else 'unknown' }}"></span>
+                        {% if hw.status %}
+                            {% if hw.status.value == 'IN_STOCK' %}In Stock
+                            {% elif hw.status.value == 'RESERVED' %}Reserved
+                            {% elif hw.status.value == 'IMAGING' %}Imaging
+                            {% elif hw.status.value == 'SHIPPED' %}Shipped
+                            {% elif hw.status.value == 'COMPLETED' %}Completed
+                            {% else %}{{ hw.status.value }}
+                            {% endif %}
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                    </button>
+                </div>
+                
+                <!-- Details Grid -->
+                <div class="row g-2 mb-3">
+                    {% if hw.serial_number %}
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <div class="detail-label">Serial</div>
+                            <div class="detail-value text-mono">{{ hw.serial_number }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if hw.ip %}
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <div class="detail-label">IP Address</div>
+                            <div class="detail-value text-mono">
+                                <span class="text-decoration-none">{{ hw.ip }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if hw.mac %}
+                    <div class="col-12">
+                        <div class="detail-item">
+                            <div class="detail-label">MAC Address</div>
+                            <div class="detail-value text-mono">
+                                <span class="text-decoration-none">{{ hw.mac }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if hw.center %}
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <div class="detail-label">Center</div>
+                            <div class="detail-value">{{ hw.center }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if hw.enduser %}
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <div class="detail-label">User</div>
+                            <div class="detail-value">{{ hw.enduser }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if hw.ticket %}
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <div class="detail-label">Ticket</div>
+                            <div class="detail-value">#{{ hw.ticket }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if hw.po_ticket %}
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <div class="detail-label">PO-Ticket</div>
+                            <div class="detail-value">{{ hw.po_ticket }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <div class="detail-label">ID</div>
+                            <div class="detail-value">{{ hw.id }}</div>
+                        </div>
+                    </div>
+                    
+                    {% if hw.missing %}
+                    <div class="col-6">
+                        <div class="detail-item">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Missing
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Actions Row -->
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <div class="d-flex gap-2">
+                        <a href="/hardware/{{ hw.id }}/edit" 
+                           class="btn btn-outline-primary btn-sm"
+                           title="Edit Hardware">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        
+                        <a href="/hardware/{{ hw.id }}" 
+                           class="btn btn-outline-info btn-sm"
+                           title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>                        
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="checkbox" 
+                               class="form-check-input row-checkbox" 
+                               value="{{ hw.id }}" 
+                               name="selected_hardware"
+                               title="Select for bulk actions">
+                        
+                        <button type="button" 
+                                class="btn btn-outline-danger btn-sm"
+                                onclick="deleteHardware({{ hw.id }}, '{{ hw.hostname or 'Unknown' }}')"
+                                title="Delete Hardware">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Expandable Details -->
+                {% if hw.comment or hw.uuid %}
+                <div class="mt-2">
+                    <button class="btn btn-link btn-sm p-0 text-muted" 
+                            type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#details-{{ hw.id }}">
+                        <i class="fas fa-chevron-down me-1"></i>
+                        More Details
+                    </button>
+                    
+                    <div class="collapse mt-2" id="details-{{ hw.id }}">
+                        {% if hw.uuid %}
+                        <div class="detail-item mb-2">
+                            <div class="detail-label">UUID</div>
+                            <div class="detail-value text-mono small">{{ hw.uuid }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if hw.comment %}
+                        <div class="detail-item">
+                            <div class="detail-label">Comments</div>
+                            <div class="detail-value small">{{ hw.comment }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not hardware_list %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-inbox fa-3x text-muted"></i>
+            </div>
+            <h5 class="text-muted mb-2">No hardware found</h5>
+            <p class="text-muted small mb-3">
+                {% if search_query or status_filter or model_filter %}
+                    No devices match your filters.
+                {% else %}
+                    Add your first hardware device.
+                {% endif %}
+            </p>
+            <div class="d-grid gap-2 d-md-block">
+                {% if search_query or status_filter or model_filter %}
+                <button class="btn btn-outline-primary btn-sm" 
+                        onclick="clearFilters()">
+                    Clear Filters
+                </button>
+                {% endif %}
+                <a href="/hardware/add" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>
+                    Add Hardware
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Mobile Pagination -->
+{% if total_pages and total_pages > 1 %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Mobile pagination">
+        <ul class="pagination pagination-sm">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" 
+                   href="#" 
+                   hx-get="/hardware?page={{ current_page - 1 }}&mobile=1"
+                   hx-target="#hardware-mobile-cards"
+                   hx-swap="outerHTML">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            
+            <li class="page-item active">
+                <span class="page-link">{{ current_page }} of {{ total_pages }}</span>
+            </li>
+            
+            {% if current_page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" 
+                   href="#" 
+                   hx-get="/hardware?page={{ current_page + 1 }}&mobile=1"
+                   hx-target="#hardware-mobile-cards"
+                   hx-swap="outerHTML">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+<style>
+.hardware-card {
+    transition: var(--transition-base);
+    border: 1px solid var(--gray-200);
+}
+
+.hardware-card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.detail-item {
+    margin-bottom: 0.5rem;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-bottom: 0.125rem;
+}
+
+.detail-value {
+    font-size: 0.875rem;
+    color: var(--gray-800);
+    word-break: break-all;
+}
+
+.detail-value a {
+    color: inherit;
+}
+
+.detail-value a:hover {
+    color: var(--primary-color);
+}
+
+@media (max-width: 576px) {
+    .hardware-card .card-body {
+        padding: 1rem;
+    }
+    
+    .detail-item {
+        margin-bottom: 0.75rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+</style>

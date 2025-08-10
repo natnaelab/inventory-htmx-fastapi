@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Inventory Management System{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block header %}
+<div class="row align-items-center mb-4">
+    <div class="col">
+        <h1 class="mb-0">
+            <i class="fas fa-tachometer-alt text-primary me-3"></i>
+            Hardware Inventory Dashboard
+        </h1>
+        <p class="text-muted mb-0">Manage and track your hardware inventory</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% include "partials/stats_cards.html" %}
+
+<!-- Search and Filter Bar -->
+<div class="search-bar">
+    <form id="dashboard-filter-form" hx-get="/hardware" 
+          hx-target="#hardware-table-container" 
+          hx-trigger="input delay:300ms, change, search, submit"
+          hx-indicator="#search-indicator"
+          hx-push-url="true">
+        <div class="row align-items-end">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <label for="search" class="form-label">Search Hardware</label>
+                <div class="search-input">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" 
+                           class="form-control" 
+                           id="search" 
+                           name="search" 
+                           placeholder="Search by hostname, MAC, IP, serial..."
+                           value="">
+                </div>
+            </div>
+            <div class="col-md-2 mb-3 mb-md-0">
+                <label for="status-filter" class="form-label">Status</label>
+                <select class="form-select" id="status-filter" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="IN_STOCK" {{ 'selected' if status_filter == 'IN_STOCK' }}>In Stock</option>
+                    <option value="RESERVED" {{ 'selected' if status_filter == 'RESERVED' }}>Reserved</option>
+                    <option value="IMAGING" {{ 'selected' if status_filter == 'IMAGING' }}>Imaging</option>
+                    <option value="SHIPPED" {{ 'selected' if status_filter == 'SHIPPED' }}>Shipped</option>
+                    <option value="COMPLETED" {{ 'selected' if status_filter == 'COMPLETED' }}>Completed</option>
+                </select>
+            </div>
+            <div class="col-md-2 mb-3 mb-md-0">
+                <label for="model-filter" class="form-label">Model</label>
+                <select class="form-select" id="model-filter" name="model">
+                    <option value="">All Models</option>
+                    <option value="Notebook" {{ 'selected' if model_filter == 'Notebook' }}>Notebook</option>
+                    <option value="MFF" {{ 'selected' if model_filter == 'MFF' }}>MFF</option>
+                    <option value="AllInOne" {{ 'selected' if model_filter == 'AllInOne' }}>All-in-One PC</option>
+                    <option value="Backpack" {{ 'selected' if model_filter == 'Backpack' }}>Backpack</option>
+                    <option value="DockingStation" {{ 'selected' if model_filter == 'DockingStation' }}>Docking Station</option>
+                    <option value="Monitor" {{ 'selected' if model_filter == 'Monitor' }}>Monitor</option>
+                </select>
+            </div>
+            <div class="col-md-2 mb-3 mb-md-0">
+                <label for="center-filter" class="form-label">Center</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="center-filter" 
+                    name="center" 
+                    placeholder="Filter by center"
+                    value="">
+            </div>
+            <div class="col-md-2">
+                <button type="button" 
+                        class="btn btn-outline-secondary w-100"
+                        onclick="clearDashboardFilters()">
+                    <i class="fas fa-times me-1"></i>
+                    Clear
+                </button>
+            </div>
+        </div>
+        <span id="search-indicator" class="htmx-indicator">
+            <div class="d-flex align-items-center mt-2">
+                <div class="loading-spinner me-2"></div>
+                <small class="text-muted">Searching...</small>
+            </div>
+        </span>
+    </form>
+</div>
+
+<!-- Hardware Table Container -->
+<div id="hardware-table-container">
+    {% include "partials/hardware_table.html" %}
+</div>
+{% endblock %}

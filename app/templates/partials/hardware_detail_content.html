@@ -1,0 +1,116 @@
+<div class="card shadow-custom">
+  <div class="card-body">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="mb-3">
+          <div class="text-muted small">Hostname</div>
+          <div class="fw-semibold">{{ hardware.hostname or 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">Serial Number</div>
+          <div class="fw-semibold text-mono">{{ hardware.serial_number or 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">Model</div>
+          <div class="fw-semibold">{{ hardware.model.value if hardware.model else 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">Status</div>
+          <div>
+            <span class="status-pill status-{{ (hardware.status.value|lower).replace('_','-') if hardware.status else 'unknown' }}">
+              <span class="status-badge status-{{ (hardware.status.value|lower).replace('_','-') if hardware.status else 'unknown' }}"></span>
+              {% if hardware.status %}
+                {% if hardware.status.value == 'IN_STOCK' %}In Stock
+                {% elif hardware.status.value == 'RESERVED' %}Reserved
+                {% elif hardware.status.value == 'IMAGING' %}Imaging
+                {% elif hardware.status.value == 'SHIPPED' %}Shipped
+                {% elif hardware.status.value == 'COMPLETED' %}Completed
+                {% else %}{{ hardware.status.value }}
+                {% endif %}
+              {% else %}
+                Unknown
+              {% endif %}
+            </span>
+          </div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">Center</div>
+          <div class="fw-semibold">{{ hardware.center or 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">User</div>
+          <div class="fw-semibold">{{ hardware.enduser or 'N/A' }}</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <div class="text-muted small">IP Address</div>
+          <div class="fw-semibold text-mono">{{ hardware.ip or 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">MAC Address</div>
+          <div class="fw-semibold text-mono">{{ hardware.mac or 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">UUID</div>
+          <div class="fw-semibold text-mono">{{ hardware.uuid or 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">Ticket#</div>
+          <div class="fw-semibold">{{ hardware.ticket or 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">PO-Ticket</div>
+          <div class="fw-semibold">{{ hardware.po_ticket or 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">Worker</div>
+          <div class="fw-semibold">{{ hardware.admin or 'N/A' }}</div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">Missing Status</div>
+          <div class="fw-semibold">
+            {% if hardware.missing %}
+              <span class="badge bg-warning text-dark">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                Missing
+              </span>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="mb-3">
+          <div class="text-muted small">Notes</div>
+          <div class="fw-semibold whitespace-pre-wrap">{{ hardware.comment or '—' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-4 pt-3 border-top">
+      <h6 class="text-muted mb-3">
+        <i class="fas fa-clock me-2"></i>
+        Timeline
+      </h6>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="text-muted small">Created</div>
+          <div class="fw-semibold small">{{ hardware.created_at.strftime('%Y-%m-%d %H:%M') if hardware.created_at else 'N/A' }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted small">Last Updated</div>
+          <div class="fw-semibold small">{{ hardware.updated_at.strftime('%Y-%m-%d %H:%M') if hardware.updated_at else 'N/A' }}</div>
+        </div>
+        <div class="col-md-4">
+          <div class="text-muted small">Shipped</div>
+          <div class="fw-semibold small">
+            {% if hardware.shipped_at %}
+              {{ hardware.shipped_at.strftime('%Y-%m-%d %H:%M') }}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

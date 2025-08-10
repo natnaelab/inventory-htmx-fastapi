@@ -1,0 +1,248 @@
+<!-- Hardware Table Partial - Used for HTMX updates -->
+<div class="fade-in">
+    <div class="table-container desktop-table">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <div class="d-flex align-items-center">
+            <h5 class="mb-0 me-3">
+                <i class="fas fa-laptop me-2 text-primary"></i>
+                Hardware Inventory
+            </h5>
+            {% set item_count = total_count if total_count else hardware_list|length %}
+            <span class="badge bg-light text-dark">
+                {{ item_count }} device{{ 's' if item_count != 1 else '' }}
+            </span>
+        </div>
+    </div>
+
+    {% if hardware_list %}
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Device Info</th>
+                    <th scope="col">Network</th>
+                    <th scope="col">Assignment</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Model</th>
+                    <th scope="col" style="width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hw in hardware_list %}
+                <tr class="hardware-row" data-hw-id="{{ hw.id }}">
+                    <td>
+                        <div class="d-flex flex-column">
+                            <div class="fw-semibold text-primary">
+                                {{ hw.hostname or 'N/A' }}
+                            </div>
+                            <div class="small text-muted text-mono">
+                                ID: {{ hw.id }}
+                                {% if hw.serial_number %}
+                                <br>SN: {{ hw.serial_number }}
+                                {% endif %}
+                            </div>
+                            {% if hw.uuid %}
+                            <div class="small text-muted text-mono">
+                                UUID: {{ hw.uuid[:8] }}...
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            {% if hw.ip %}
+                            <div class="small">
+                                <i class="fas fa-network-wired me-1 text-muted"></i>
+                                <span class="text-mono">{{ hw.ip }}</span>
+                            </div>
+                            {% endif %}
+                            {% if hw.mac %}
+                            <div class="small">
+                                <i class="fas fa-ethernet me-1 text-muted"></i>
+                                <span class="text-mono">{{ hw.mac }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            {% if hw.center %}
+                            <div class="small">
+                                <i class="fas fa-building me-1 text-muted"></i>
+                                {{ hw.center }}
+                            </div>
+                            {% endif %}
+                            {% if hw.enduser %}
+                            <div class="small">
+                                <i class="fas fa-user me-1 text-muted"></i>
+                                {{ hw.enduser }}
+                            </div>
+                            {% endif %}
+                            {% if hw.ticket %}
+                            <div class="small">
+                                <i class="fas fa-ticket-alt me-1 text-muted"></i>
+                                #{{ hw.ticket }}
+                            </div>
+                            {% endif %}
+                            {% if hw.po_ticket %}
+                            <div class="small">
+                                <i class="fas fa-receipt me-1 text-muted"></i>
+                                PO: {{ hw.po_ticket }}
+                            </div>
+                            {% endif %}
+                            {% if hw.missing %}
+                            <div class="small">
+                                <span class="badge badge-sm bg-warning text-dark">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    Missing
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-pill status-{{ (hw.status.value|lower).replace('_','-') if hw.status else 'unknown' }}" title="Status">
+                            <span class="status-badge status-{{ (hw.status.value|lower).replace('_','-') if hw.status else 'unknown' }}"></span>
+                            {% if hw.status %}
+                                {% if hw.status.value == 'IN_STOCK' %}In Stock
+                                {% elif hw.status.value == 'RESERVED' %}Reserved
+                                {% elif hw.status.value == 'IMAGING' %}Imaging
+                                {% elif hw.status.value == 'SHIPPED' %}Shipped
+                                {% elif hw.status.value == 'COMPLETED' %}Completed
+                                {% else %}{{ hw.status.value }}
+                                {% endif %}
+                            {% else %}
+                                Unknown
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% set model_icons = {
+                                'Notebook': 'fas fa-laptop',
+                                'MFF': 'fas fa-desktop',
+                                'AllInOne': 'fas fa-desktop',
+                                'Backpack': 'fas fa-backpack',
+                                'DockingStation': 'fas fa-plug',
+                                'Monitor': 'fas fa-tv'
+                            } %}
+                            {% set model_labels = {
+                                'Notebook': 'Notebook',
+                                'MFF': 'MFF (Mini Form Factor)',
+                                'AllInOne': 'All-in-One PC',
+                                'Backpack': 'Backpack PC',
+                                'DockingStation': 'Docking Station',
+                                'Monitor': 'Monitor'
+                            } %}
+                            <i class="{{ model_icons.get(hw.model.value if hw.model else '', 'fas fa-question') }} me-2 text-muted"></i>
+                            <span class="small">{{ model_labels.get(hw.model.value if hw.model else '', 'Unknown') }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="/hardware/{{ hw.id }}/edit" 
+                               class="action-btn btn-edit" 
+                               title="Edit Hardware">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="/hardware/{{ hw.id }}" 
+                               class="action-btn" 
+                               title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" 
+                                    class="action-btn btn-delete" 
+                                    title="Delete Hardware"
+                                    onclick="deleteHardware({{ hw.id }}, '{{ hw.hostname or 'Unknown' }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if total_pages and total_pages > 1 %}
+    <div class="d-flex justify-content-between align-items-center p-3 border-top">
+        <div class="text-muted small">
+            Showing {{ (current_page - 1) * per_page + 1 }} to {{ current_page * per_page if current_page * per_page < total_count else total_count }} of {{ total_count }} entries
+        </div>
+        <nav aria-label="Hardware pagination">
+            <ul class="pagination pagination-sm mb-0">
+                {% set start_page = 1 if current_page - 2 < 1 else current_page - 2 %}
+                {% set end_page = total_pages if current_page + 2 > total_pages else current_page + 2 %}
+                {% if current_page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" 
+                       href="#" 
+                       hx-get="/hardware?page={{ current_page - 1 }}&search={{ search_query or '' }}&status={{ status_filter or '' }}&model={{ model_filter or '' }}&center={{ center_filter or '' }}"
+                        hx-target="#hardware-table-container">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in range(start_page, end_page + 1) %}
+                <li class="page-item {{ 'active' if page_num == current_page else '' }}">
+                    <a class="page-link" 
+                       href="#" 
+                       hx-get="/hardware?page={{ page_num }}&search={{ search_query or '' }}&status={{ status_filter or '' }}&model={{ model_filter or '' }}&center={{ center_filter or '' }}"
+                        hx-target="#hardware-table-container">
+                        {{ page_num }}
+                    </a>
+                </li>
+                {% endfor %}
+                
+                {% if current_page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" 
+                       href="#" 
+                       hx-get="/hardware?page={{ current_page + 1 }}&search={{ search_query or '' }}&status={{ status_filter or '' }}&model={{ model_filter or '' }}&center={{ center_filter or '' }}"
+                        hx-target="#hardware-table-container">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-inbox fa-4x text-muted"></i>
+        </div>
+        <h4 class="text-muted">No hardware found</h4>
+        <p class="text-muted mb-4">
+            {% if search_query or status_filter or model_filter or center_filter %}
+                No devices match your current filters. Try adjusting your search criteria.
+            {% else %}
+                Get started by adding your first hardware device.
+            {% endif %}
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+            {% if search_query or status_filter or model_filter or center_filter %}
+            <button class="btn btn-outline-primary" onclick="clearFilters()">
+                <i class="fas fa-times me-1"></i>
+                Clear Filters
+            </button>
+            {% endif %}
+            <a href="/hardware/add" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>
+                Add Hardware
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    </div>
+    
+    <!-- Mobile Card View -->
+    <div class="mobile-cards">
+        {% include "partials/hardware_card_mobile.html" %}
+    </div>
+</div>

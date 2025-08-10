@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Hardware Details - Inventory Management System{% endblock %}
+{% block nav_hardware %}active{% endblock %}
+
+{% block header %}
+<div class="row align-items-center mb-4">
+  <div class="col">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="/hardware">Hardware</a></li>
+        <li class="breadcrumb-item active">Details</li>
+      </ol>
+    </nav>
+    <h1 class="mb-0">
+      <i class="fas fa-eye text-primary me-3"></i>
+        {{ hardware.hostname }} | Hardware Details
+    </h1>
+    <p class="text-muted mb-0">View device information and activity</p>
+  </div>
+  <div class="col-auto d-flex gap-2">
+    <a href="/hardware/{{ hardware.id }}/edit" class="btn btn-outline-primary">
+      <i class="fas fa-edit me-1"></i>
+      Edit
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="hardware-details-container">
+  {% include "partials/hardware_detail_content.html" %}
+</div>
+{% endblock %}

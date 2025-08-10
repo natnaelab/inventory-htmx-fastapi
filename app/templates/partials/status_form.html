@@ -1,0 +1,84 @@
+<!-- Status Update Form Modal Content -->
+<form hx-post="/hardware/{{ hardware.id }}/status" 
+      hx-target="#{{ hx_target_id|default('hardware-table-container') }}"
+      hx-swap="innerHTML"
+      hx-on::after-request="if(event.detail.successful) { bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide(); }">
+    
+    <div class="mb-4">
+        <div class="d-flex align-items-center mb-3">
+            <div class="me-3">
+                {% set model_icons = {
+                    'Notebook': 'fas fa-laptop',
+                    'MFF': 'fas fa-desktop',
+                    'AllInOne': 'fas fa-desktop',
+                    'Backpack': 'fas fa-backpack',
+                    'DockingStation': 'fas fa-plug',
+                    'Monitor': 'fas fa-tv'
+                } %}
+                <i class="{{ model_icons.get(hardware.model.value if hardware.model else '', 'fas fa-question') }} fa-2x text-muted"></i>
+            </div>
+            <div>
+                <h6 class="mb-1">{{ hardware.hostname or 'Unknown Device' }}</h6>
+                <small class="text-muted">
+                    {{ hardware.model.value if hardware.model else 'Unknown Model' }} | 
+                    SN: {{ hardware.serial_number or 'N/A' }}
+                </small>
+            </div>
+        </div>
+        
+        <div class="current-status">
+            <label class="form-label small text-muted">Current Status:</label>
+            <div>
+                <span class="status-pill status-{{ (hardware.status.value|lower).replace('_','-') if hardware.status else 'unknown' }}">
+                    <span class="status-badge status-{{ (hardware.status.value|lower).replace('_','-') if hardware.status else 'unknown' }}"></span>
+                    {% if hardware.status %}
+                        {% if hardware.status.value == 'IN_STOCK' %}In Stock
+                        {% elif hardware.status.value == 'RESERVED' %}Reserved
+                        {% elif hardware.status.value == 'IMAGING' %}Imaging
+                        {% elif hardware.status.value == 'SHIPPED' %}Shipped
+                        {% elif hardware.status.value == 'COMPLETED' %}Completed
+                        {% else %}{{ hardware.status.value }}
+                        {% endif %}
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="new-status" class="form-label">
+            New Status <span class="text-danger">*</span>
+        </label>
+        <select class="form-select form-select-lg" id="new-status" name="status" required>
+            <option value="">Select new status...</option>
+            <option value="IN_STOCK" {{ 'disabled' if hardware.status and hardware.status.value == 'IN_STOCK' else '' }}>
+                In Stock
+            </option>
+            <option value="RESERVED" {{ 'disabled' if hardware.status and hardware.status.value == 'RESERVED' else '' }}>
+                Reserved
+            </option>
+            <option value="IMAGING" {{ 'disabled' if hardware.status and hardware.status.value == 'IMAGING' else '' }}>
+                Imaging
+            </option>
+            <option value="SHIPPED" {{ 'disabled' if hardware.status and hardware.status.value == 'SHIPPED' else '' }}>
+                Shipped
+            </option>
+            <option value="COMPLETED" {{ 'disabled' if hardware.status and hardware.status.value == 'COMPLETED' else '' }}>
+                Completed
+            </option>
+        </select>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sync-alt me-1"></i>
+            Update Status
+        </button>
+    </div>
+</form>

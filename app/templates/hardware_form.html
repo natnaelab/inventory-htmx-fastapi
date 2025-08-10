@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if hardware %}Edit Hardware - {{ hardware.hostname or 'Unknown' }}{% else %}Add New Hardware{% endif %} - Inventory Management System
+{% endblock %}
+
+{% block nav_hardware %}active{% endblock %}
+
+{% block header %}
+<div class="row align-items-center mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/hardware">Hardware</a></li>
+                <li class="breadcrumb-item active">
+                    {% if hardware %}Edit{% else %}Add New{% endif %}
+                </li>
+            </ol>
+        </nav>
+        <h1 class="mb-0">
+            <i class="fas fa-{% if hardware %}edit{% else %}plus{% endif %} text-primary me-3"></i>
+            {% if hardware %}
+                Edit Hardware: {{ hardware.hostname or 'Unknown Device' }}
+            {% else %}
+                Add New Hardware
+            {% endif %}
+        </h1>
+        <p class="text-muted mb-0">
+            {% if hardware %}
+                Update hardware information and status
+            {% else %}
+                Enter details for new hardware device
+            {% endif %}
+        </p>
+    </div>
+    <div class="col-auto">
+        <a href="/hardware" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Back to List
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Main Form Card -->
+        <div class="card shadow-custom-lg">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Hardware Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form hx-post="{% if hardware %}/hardware/{{ hardware.id }}/edit{% else %}/hardware/add{% endif %}" 
+                      hx-target="#form-container"
+                      hx-swap="outerHTML"
+                      hx-indicator="#form-indicator"
+                      data-hardware-form
+                      class="needs-validation"
+                      novalidate>
+                    
+                    <div id="form-container">
+                        <!-- Basic Information Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary fw-semibold mb-3">
+                                    <i class="fas fa-desktop me-2"></i>
+                                    Basic Information
+                                </h6>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="hostname" class="form-label">
+                                    Hostname <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="hostname" 
+                                       name="hostname" 
+                                       value="{{ hardware.hostname if hardware else '' }}"
+                                       placeholder="e.g., WS-001"
+                                       required>
+                                <div class="invalid-feedback">Hostname is required.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="seriennumber" class="form-label">
+                                    S/N <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control text-mono" 
+                                       id="serial_number" 
+                                        name="serial_number" 
+                                       value="{{ hardware.serial_number if hardware else '' }}"
+                                       placeholder="e.g., SN123456789"
+                                       required>
+                                <div class="invalid-feedback">Serial number is required.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="model" class="form-label">
+                                    Model <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="model" name="model" required>
+                                    <option value="">Select model type...</option>
+                                    <option value="Notebook" {{ 'selected' if hardware and hardware.model.value == 'Notebook' }}>
+                                        Notebook
+                                    </option>
+                                    <option value="MFF" {{ 'selected' if hardware and hardware.model.value == 'MFF' }}>
+                                        MFF (Mini Form Factor)
+                                    </option>
+                                    <option value="AllInOne" {{ 'selected' if hardware and hardware.model.value == 'AllInOne' }}>
+                                        All-in-One PC
+                                    </option>
+                                    <option value="Backpack" {{ 'selected' if hardware and hardware.model.value == 'Backpack' }}>
+                                        Backpack PC
+                                    </option>
+                                    <option value="DockingStation" {{ 'selected' if hardware and hardware.model.value == 'DockingStation' }}>
+                                        Docking Station
+                                    </option>
+                                    <option value="Monitor" {{ 'selected' if hardware and hardware.model.value == 'Monitor' }}>
+                                        Monitor
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback">Model is required.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="status" class="form-label">
+                                    Status <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="">Select status...</option>
+                                    <option value="IN_STOCK" {{ 'selected' if hardware and hardware.status.value == 'IN_STOCK' }}>
+                                        In Stock
+                                    </option>
+                                    <option value="RESERVED" {{ 'selected' if hardware and hardware.status.value == 'RESERVED' }}>
+                                        Reserved
+                                    </option>
+                                    <option value="IMAGING" {{ 'selected' if hardware and hardware.status.value == 'IMAGING' }}>
+                                        Imaging
+                                    </option>
+                                    <option value="SHIPPED" {{ 'selected' if hardware and hardware.status.value == 'SHIPPED' }}>
+                                        Shipped
+                                    </option>
+                                    <option value="COMPLETED" {{ 'selected' if hardware and hardware.status.value == 'COMPLETED' }}>
+                                        Completed
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback">Status is required.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Network Information Section -->
+                        <div class="row mb-4 mt-5">
+                            <div class="col-12">
+                                <h6 class="text-primary fw-semibold mb-3">
+                                    <i class="fas fa-network-wired me-2"></i>
+                                    Network Information
+                                </h6>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="ip" class="form-label">IP Address</label>
+                                <input type="text" 
+                                       class="form-control text-mono" 
+                                       id="ip" 
+                                       name="ip" 
+                                       value="{{ hardware.ip if hardware else '' }}"
+                                       placeholder="e.g., 192.168.1.100"
+                                       pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$">
+                                <div class="invalid-feedback">Enter a valid IPv4 address.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="mac" class="form-label">MAC Address</label>
+                                <input type="text" 
+                                       class="form-control text-mono" 
+                                       id="mac" 
+                                       name="mac" 
+                                       value="{{ hardware.mac if hardware else '' }}"
+                                       placeholder="e.g., 00:11:22:33:44:55"
+                                       pattern="^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$">
+                                <div class="invalid-feedback">Enter a valid MAC address (e.g., 00:11:22:33:44:55).</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="uuid" class="form-label">UUID</label>
+                                <input type="text" 
+                                       class="form-control text-mono" 
+                                       id="uuid" 
+                                       name="uuid" 
+                                       value="{{ hardware.uuid if hardware else '' }}"
+                                       placeholder="e.g., 550e8400-e29b-41d4-a716-446655440000">
+                            </div>
+                        </div>
+                        
+                        <!-- Assignment Information Section -->
+                        <div class="row mb-4 mt-5">
+                            <div class="col-12">
+                                <h6 class="text-primary fw-semibold mb-3">
+                                    <i class="fas fa-user-cog me-2"></i>
+                                    Assignment Information
+                                </h6>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="center" class="form-label">Center</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="center" 
+                                       name="center" 
+                                       value="{{ hardware.center if hardware else '' }}"
+                                       placeholder="e.g., Main Office, Branch A"
+                                       list="center-list">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="enduser" class="form-label">User</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="enduser" 
+                                       name="enduser" 
+                                       value="{{ hardware.enduser if hardware else '' }}"
+                                       placeholder="e.g., John Doe, Department">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="ticket" class="form-label">Ticket#</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="ticket" 
+                                       name="ticket" 
+                                       value="{{ hardware.ticket if hardware else '' }}"
+                                       placeholder="e.g., TKT-12345">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="po_ticket" class="form-label">PO-Ticket</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="po_ticket" 
+                                       name="po_ticket" 
+                                       value="{{ hardware.po_ticket if hardware else '' }}"
+                                       placeholder="e.g., PO-98765">
+                                <div class="form-text">PO ticket</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="admin" class="form-label">
+                                    Worker <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="admin" 
+                                       name="admin" 
+                                       value="{{ hardware.admin if hardware else '' }}"
+                                       placeholder="e.g., worker@company.com"
+                                       required>
+                                <div class="invalid-feedback">Worker is required.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="missing" 
+                                           name="missing"
+                                           {{ 'checked' if hardware and hardware.missing else '' }}>
+                                    <label class="form-check-label" for="missing">
+                                        <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
+                                        Mark as Missing
+                                    </label>
+                                    <div class="form-text">Check if this hardware is currently missing</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Information Section -->
+                        <div class="row mb-4 mt-5">
+                            <div class="col-12">
+                                <h6 class="text-primary fw-semibold mb-3">
+                                    <i class="fas fa-sticky-note me-2"></i>
+                                    Additional Information
+                                </h6>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="comment" class="form-label">Comments</label>
+                                <textarea class="form-control" 
+                                          id="comment" 
+                                          name="comment" 
+                                          rows="4" 
+                                          placeholder="Additional notes, configuration details, or special instructions...">{{ hardware.comment if hardware else '' }}</textarea>
+                                <div class="form-text">Optional additional information</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                    <div>
+                                        <span class="text-muted small">
+                                            <span class="text-danger">*</span> Required fields
+                                        </span>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a href="/hardware" class="btn btn-outline-secondary">
+                                            <i class="fas fa-times me-1"></i>
+                                            Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span id="form-indicator" class="htmx-indicator loading-spinner me-1"></span>
+                                            <i class="fas fa-save me-1"></i>
+                                            {% if hardware %}Update Hardware{% else %}Add Hardware{% endif %}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
