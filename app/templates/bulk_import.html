@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Import - Inventory Management System{% endblock %}
+
+{% block header %}
+<div class="row align-items-center mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/hardware">Hardware</a></li>
+                <li class="breadcrumb-item active">Bulk Import</li>
+            </ol>
+        </nav>
+        <h1 class="mb-0">
+            <i class="fas fa-upload text-primary me-3"></i>
+            Bulk Import
+        </h1>
+        <p class="text-muted mb-0">Bulk import hardware data from CSV or Excel files</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-csv me-2"></i>
+                    Upload CSV or Excel File
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>File Format Requirements:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Models:</strong> Notebook, MFF, AllInOne, Backpack, DockingStation, Monitor</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Status:</strong> IN_STOCK, RESERVED, IMAGING, SHIPPED, COMPLETED</p>
+                        </div>
+                    </div>
+                    <p class="mb-0"><small><strong>Note:</strong> Records are matched by ID - if ID exists, it will be updated; if ID is empty or not found, a new record will be created. Missing column uses "Yes"/"No".</small></p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" action="/hardware-import">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv,.xlsx,.xls" required>
+                        <div class="form-text">Accepts CSV (.csv) and Excel files (.xlsx, .xls). Maximum file size: 10MB</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/hardware" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Hardware List
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-1"></i>
+                            Import File
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Sample File Format
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Hostname</th>
+                                <th>Serial Number</th>
+                                <th>Model</th>
+                                <th>Status</th>
+                                <th>IP Address</th>
+                                <th>Admin</th>
+                                <th>Missing</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="text-muted">
+                                <td><strong>123</strong></td>
+                                <td>LAPTOP-001</td>
+                                <td>ABC123456</td>
+                                <td>Notebook</td>
+                                <td>IN_STOCK</td>
+                                <td>192.168.1.100</td>
+                                <td>admin@company.com</td>
+                                <td>No</td>
+                            </tr>
+                            <tr class="text-muted">
+                                <td><em>(empty for new)</em></td>
+                                <td>DESKTOP-002</td>
+                                <td>DEF789012</td>
+                                <td>AllInOne</td>
+                                <td>RESERVED</td>
+                                <td>DHCP</td>
+                                <td>admin@company.com</td>
+                                <td>No</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <small class="text-muted">
+                    <strong>Note:</strong> Records are matched by <strong>ID</strong>. If a record with the same ID exists, it will be updated. If ID is empty or not found, a new record will be created with an auto-generated ID.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

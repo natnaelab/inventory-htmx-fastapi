@@ -1,0 +1,412 @@
+import csv
+import io
+import logging
+from datetime import datetime, timezone
+from typing import Optional, List, Dict, Any, Tuple
+
+import pandas as pd
+import qrcode
+from sqlalchemy.orm import Session
+
+from app.models.hardware import Hardware, StatusEnum, ModelEnum
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+class HardwareService:
+    def __init__(self, db: Session):
+        self.db = db
+    
+    def get_hardware_by_id(self, hardware_id: int) -> Optional[Hardware]:
+        return self.db.query(Hardware).filter(Hardware.id == hardware_id).first()
+    
+    def get_filtered_hardware_query(self, 
+                                   search: Optional[str] = None,
+                                   status: Optional[List[str]] = None,
+                                   model: Optional[str] = None,
+                                   center: Optional[str] = None):
+        query = self.db.query(Hardware)
+
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                (Hardware.hostname.ilike(search_term))
+                | (Hardware.ip.ilike(search_term))
+                | (Hardware.mac.ilike(search_term))
+                | (Hardware.serial_number.ilike(search_term))
+                | (Hardware.uuid.ilike(search_term))
+                | (Hardware.enduser.ilike(search_term))
+                | (Hardware.ticket.ilike(search_term))
+            )
+
+        status_filter_list = []
+        if status and len(status) > 0:
+            for s in status:
+                if s:
+                    try:
+                        status_enum = StatusEnum(s)
+                        status_filter_list.append(status_enum)
+                    except ValueError:
+                        pass
+        
+        if status_filter_list:
+            query = query.filter(Hardware.status.in_(status_filter_list))
+        else:
+            default_statuses = [s for s in StatusEnum if s != StatusEnum.COMPLETED]
+            query = query.filter(Hardware.status.in_(default_statuses))
+        
+        if model:
+            try:
+                model_enum = ModelEnum(model)
+                query = query.filter(Hardware.model == model_enum)
+            except ValueError:
+                pass
+        
+        if center:
+            query = query.filter(Hardware.center.ilike(f"%{center}%"))
+        
+        return query, status_filter_list if status_filter_list else [s for s in StatusEnum if s != StatusEnum.COMPLETED]
+    
+    def get_hardware_list(self,
+                         search: Optional[str] = None,
+                         status: Optional[List[str]] = None,
+                         model: Optional[str] = None,
+                         center: Optional[str] = None,
+                         page: int = 1,
+                         per_page: int = 20,
+                         sort_by: str = "updated_at",
+                         sort_order: str = "desc") -> Dict[str, Any]:
+
+        query, status_filter_list = self.get_filtered_hardware_query(search, status, model, center)
+        
+        total_count = query.count()
+        
+        sort_column = getattr(Hardware, sort_by, Hardware.updated_at)
+        if sort_order.lower() == "asc":
+            query = query.order_by(sort_column.asc())
+        else:
+            query = query.order_by(sort_column.desc())
+        
+        offset = (page - 1) * per_page
+        hardware_list = query.offset(offset).limit(per_page).all()
+        
+        total_pages = (total_count + per_page - 1) // per_page
+        
+        status_counts = {}
+        for s in StatusEnum:
+            count = self.db.query(Hardware).filter(Hardware.status == s).count()
+            status_counts[s.value] = count
+        
+        return {
+            "hardware_list": hardware_list,
+            "total_count": total_count,
+            "current_page": page,
+            "per_page": per_page,
+            "total_pages": total_pages,
+            "status_counts": status_counts,
+            "status_filter": [s.value for s in status_filter_list]
+        }
+    
+    def create_hardware(self, hardware_data: Dict[str, Any], current_user: Dict[str, Any]) -> Hardware:
+        now = datetime.now(timezone.utc)
+        
+        hardware = Hardware(
+            hostname=hardware_data.get('hostname'),
+            serial_number=hardware_data.get('serial_number'),
+            model=hardware_data.get('model'),
+            status=hardware_data.get('status'),
+            ip=hardware_data.get('ip'),
+            mac=hardware_data.get('mac'),
+            uuid=hardware_data.get('uuid'),
+            center=hardware_data.get('center'),
+            enduser=hardware_data.get('enduser'),
+            ticket=hardware_data.get('ticket'),
+            po_ticket=hardware_data.get('po_ticket'),
+            admin=current_user["username"],
+            comment=hardware_data.get('comment'),
+            missing=hardware_data.get('missing', False),
+            created_at=now,
+            updated_at=now,
+            shipped_at=now if hardware_data.get('status') == StatusEnum.SHIPPED else None,
+        )
+        
+        self.db.add(hardware)
+        self.db.commit()
+        self.db.refresh(hardware)
+        
+        return hardware
+    
+    def update_hardware(self, hardware_id: int, hardware_data: Dict[str, Any], current_user: Dict[str, Any]) -> Hardware:
+        hardware = self.get_hardware_by_id(hardware_id)
+        if not hardware:
+            raise ValueError("Hardware not found")
+        
+        old_status = hardware.status
+        
+        hardware.hostname = hardware_data.get('hostname')
+        hardware.serial_number = hardware_data.get('serial_number')
+        hardware.model = hardware_data.get('model')
+        hardware.status = hardware_data.get('status')
+        hardware.ip = hardware_data.get('ip')
+        hardware.mac = hardware_data.get('mac')
+        hardware.uuid = hardware_data.get('uuid')
+        hardware.center = hardware_data.get('center')
+        hardware.enduser = hardware_data.get('enduser')
+        hardware.ticket = hardware_data.get('ticket')
+        hardware.po_ticket = hardware_data.get('po_ticket')
+        hardware.admin = current_user["username"]
+        hardware.comment = hardware_data.get('comment')
+        hardware.missing = hardware_data.get('missing', False)
+        hardware.updated_at = datetime.now(timezone.utc)
+        
+        if hardware_data.get('status') == StatusEnum.SHIPPED and old_status != StatusEnum.SHIPPED:
+            hardware.shipped_at = datetime.now(timezone.utc)
+        
+        self.db.commit()
+        return hardware
+    
+    def delete_hardware(self, hardware_id: int) -> bool:
+        hardware = self.get_hardware_by_id(hardware_id)
+        if not hardware:
+            raise ValueError("Hardware not found")
+        
+        self.db.delete(hardware)
+        self.db.commit()
+        return True
+    
+    def export_hardware_to_excel(self,
+                                search: Optional[str] = None,
+                                status: Optional[List[str]] = None,
+                                model: Optional[str] = None,
+                                center: Optional[str] = None) -> io.BytesIO:
+        query, _ = self.get_filtered_hardware_query(search, status, model, center)
+        hardware_list = query.order_by(Hardware.updated_at.desc()).all()
+        
+        data = []
+        for hw in hardware_list:
+            data.append({
+                'ID': hw.id,
+                'Hostname': hw.hostname,
+                'Serial Number': hw.serial_number,
+                'Model': hw.model.value if hw.model else '',
+                'Status': hw.status.value if hw.status else '',
+                'IP Address': hw.ip or '',
+                'MAC Address': hw.mac or '',
+                'UUID': hw.uuid or '',
+                'Center': hw.center or '',
+                'End User': hw.enduser or '',
+                'Ticket': hw.ticket or '',
+                'PO Ticket': hw.po_ticket or '',
+                'Admin': hw.admin,
+                'Comment': hw.comment or '',
+                'Missing': 'Yes' if hw.missing else 'No',
+                'Created At': hw.created_at.strftime('%Y-%m-%d %H:%M:%S') if hw.created_at else '',
+                'Updated At': hw.updated_at.strftime('%Y-%m-%d %H:%M:%S') if hw.updated_at else '',
+                'Shipped At': hw.shipped_at.strftime('%Y-%m-%d %H:%M:%S') if hw.shipped_at else '',
+            })
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Hardware Inventory', index=False)
+            
+            workbook = writer.book
+            worksheet = writer.sheets['Hardware Inventory']
+            
+            for column in worksheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)
+                worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        output.seek(0)
+        return output
+    
+    def import_hardware_from_file(self, file_content: bytes, filename: str, current_user: Dict[str, Any]) -> Dict[str, Any]:
+        filename = filename.lower()
+        
+        if filename.endswith('.csv'):
+            csv_string = file_content.decode('utf-8')
+            csv_reader = csv.DictReader(io.StringIO(csv_string))
+            rows = list(csv_reader)
+        elif filename.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(io.BytesIO(file_content))
+            rows = df.to_dict('records')
+        else:
+            raise ValueError("File must be a CSV or Excel file (.csv, .xlsx, .xls)")
+        
+        results = {
+            'created': 0,
+            'updated': 0,
+            'errors': [],
+            'total_rows': 0
+        }
+        
+        for row_num, row in enumerate(rows, start=2):
+            results['total_rows'] += 1
+            
+            try:
+                def safe_get(key, default=''):
+                    value = row.get(key, default)
+                    if pd.isna(value):
+                        return default
+                    return str(value).strip()
+                
+                hardware_data = self._extract_hardware_from_row(row, safe_get)
+                
+                if not all([hardware_data.get('hostname'), hardware_data.get('serial_number'), 
+                           hardware_data.get('model'), hardware_data.get('status')]):
+                    results['errors'].append(f"Row {row_num}: Missing required fields")
+                    continue
+                
+                try:
+                    hardware_data['model'] = ModelEnum(hardware_data['model'])
+                    hardware_data['status'] = StatusEnum(hardware_data['status'])
+                except ValueError as e:
+                    results['errors'].append(f"Row {row_num}: Invalid enum value - {e}")
+                    continue
+                
+                hardware_id = safe_get('ID')
+                if hardware_id and hardware_id.isdigit():
+                    existing_hardware = self.get_hardware_by_id(int(hardware_id))
+                    if existing_hardware:
+                        self.update_hardware(int(hardware_id), hardware_data, current_user)
+                        results['updated'] += 1
+                    else:
+                        self.create_hardware(hardware_data, current_user)
+                        results['created'] += 1
+                else:
+                    self.create_hardware(hardware_data, current_user)
+                    results['created'] += 1
+                    
+            except Exception as e:
+                results['errors'].append(f"Row {row_num}: {str(e)}")
+                continue
+        
+        return results
+    
+    def _extract_hardware_from_row(self, row: Dict[str, Any], safe_get) -> Dict[str, Any]:
+        missing_value = safe_get('Missing').lower()
+        missing = missing_value in ['yes', 'true', '1']
+        
+        return {
+            'hostname': safe_get('Hostname'),
+            'serial_number': safe_get('Serial Number'),
+            'model': safe_get('Model'),
+            'status': safe_get('Status'),
+            'ip': safe_get('IP Address') or None,
+            'mac': safe_get('MAC Address') or None,
+            'uuid': safe_get('UUID') or None,
+            'center': safe_get('Center') or None,
+            'enduser': safe_get('End User') or None,
+            'ticket': safe_get('Ticket') or None,
+            'po_ticket': safe_get('PO Ticket') or None,
+            'comment': safe_get('Comment') or None,
+            'missing': missing,
+        }
+    
+    def change_hardware_status(self, hardware_id: int, status: StatusEnum, current_user: Dict[str, Any]) -> Hardware:
+        hardware = self.get_hardware_by_id(hardware_id)
+        if not hardware:
+            raise ValueError("Hardware not found")
+        
+        old_status = hardware.status
+        hardware.status = status
+        hardware.admin = current_user["username"]
+        hardware.updated_at = datetime.now(timezone.utc)
+        
+        if status == StatusEnum.SHIPPED and old_status != StatusEnum.SHIPPED:
+            hardware.shipped_at = datetime.now(timezone.utc)
+        
+        self.db.commit()
+        return hardware
+    
+    def cycle_hardware_status(self, hardware_id: int, current_user: Dict[str, Any]) -> Tuple[Hardware, str]:
+        hardware = self.get_hardware_by_id(hardware_id)
+        if not hardware:
+            raise ValueError("Hardware not found")
+        
+        status_cycle = [
+            StatusEnum.IN_STOCK,
+            StatusEnum.RESERVED,
+            StatusEnum.IMAGING,
+            StatusEnum.SHIPPED,
+            StatusEnum.COMPLETED
+        ]
+        
+        try:
+            current_index = status_cycle.index(hardware.status)
+            if current_index == len(status_cycle) - 1:
+                raise ValueError("Device is already completed and cannot be cycled further")
+            
+            new_status = status_cycle[current_index + 1]
+        except ValueError:
+            new_status = status_cycle[0]
+        
+        hardware = self.change_hardware_status(hardware_id, new_status, current_user)
+        
+        status_display = {
+            'IN_STOCK': 'In Stock',
+            'RESERVED': 'Reserved', 
+            'IMAGING': 'Imaging',
+            'SHIPPED': 'Shipped',
+            'COMPLETED': 'Completed'
+        }.get(new_status.value, new_status.value)
+        
+        return hardware, status_display
+    
+    def generate_qr_code(self, hardware_id: int) -> Tuple[io.BytesIO, str]:
+        hardware = self.get_hardware_by_id(hardware_id)
+        if not hardware:
+            raise ValueError("Hardware not found")
+        
+        api_url = f"{settings.base_url}/hardware/{hardware_id}"
+        
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(api_url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        img_buffer = io.BytesIO()
+        img.save(img_buffer, format='PNG')
+        img_buffer.seek(0)
+        
+        serial = hardware.serial_number.replace('/', '-').replace('\\', '-')
+        filename = f"QR_{serial}_{hardware.hostname}.png"
+        
+        return img_buffer, filename
+
+    def generate_label_csv(self, hardware_id: int) -> Tuple[str, str]:
+        hardware = self.get_hardware_by_id(hardware_id)
+        if not hardware:
+            raise ValueError("Hardware not found")
+
+        csv_content = []
+        csv_content.append(f"HN,{hardware.hostname or ''}")
+        csv_content.append(f"SN,{hardware.serial_number or ''}")
+        csv_content.append(f"IP,{hardware.ip or ''}")
+        csv_content.append(f"T#,{hardware.ticket or ''}")
+        csv_content.append(f"PO#,{hardware.po_ticket or ''}")
+        csv_content.append(f"User,{hardware.enduser or ''}")
+        csv_content.append(f"Cent,{hardware.center or ''}")
+        
+        csv_string = '\n'.join(csv_content)
+        
+        serial = hardware.serial_number.replace('/', '-').replace('\\', '-')
+        filename = f"label_{serial}_{hardware.hostname}.csv"
+        
+        return csv_string, filename

@@ -333,7 +333,7 @@ class InventoryApp {
     }
 
     handleIpValidation(event) {
-        const ipPattern = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        const ipPattern = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|DHCP$/;
         if (event.target.value && !ipPattern.test(event.target.value)) {
             event.target.classList.add('is-invalid');
         } else {
@@ -639,6 +639,8 @@ window.copyToClipboard = function (text) {
     }
 };
 
+
+
 window.deleteHardware = function (hardwareId, hostname) {
     if (confirm(`Are you sure you want to delete "${hostname}"? This action cannot be undone.`)) {
         htmx.ajax('DELETE', `/hardware/${hardwareId}`, {
@@ -649,49 +651,36 @@ window.deleteHardware = function (hardwareId, hostname) {
 };
 
 window.clearFilters = function () {
-    const form = document.querySelector('form#hardware-filter-form') || document.querySelector('form[hx-get="/hardware"]');
+    const form = document.querySelector('form[hx-get="/hardware"]');
 
     if (form) {
         ['search', 'center'].forEach((name) => {
             const el = form.querySelector(`[name="${name}"]`);
             if (el) el.value = '';
         });
-        ['status', 'model'].forEach((name) => {
-            const el = form.querySelector(`select[name="${name}"]`);
-            if (el) el.value = '';
+
+        const modelSelect = form.querySelector('select[name="model"]');
+        if (modelSelect) {
+            modelSelect.selectedIndex = 0;
+            modelSelect.value = '';
+        }
+
+        const statusCheckboxes = form.querySelectorAll('input[name="status"]');
+        statusCheckboxes.forEach((checkbox) => {
+            checkbox.checked = checkbox.value !== 'COMPLETED';
         });
+
+        if (window.htmx) {
+            htmx.trigger(form, 'submit');
+        }
     }
 
     if (window.history && window.history.pushState) {
         window.history.pushState({}, '', '/hardware');
     }
-
-    const container = document.getElementById('hardware-table-container');
-    if (container) {
-        htmx.ajax('GET', '/hardware', { target: '#hardware-table-container', swap: 'innerHTML' });
-    }
 };
 
-window.clearDashboardFilters = function () {
-    const form = document.getElementById('dashboard-filter-form');
-    if (!form) return;
-
-    ['search', 'center'].forEach((name) => {
-        const el = form.querySelector(`[name="${name}"]`);
-        if (el) el.value = '';
-    });
-
-    ['status', 'model'].forEach((name) => {
-        const el = form.querySelector(`select[name="${name}"]`);
-        if (el) { el.selectedIndex = 0; el.value = ''; }
-    });
-
-    if (window.htmx) {
-        htmx.trigger(form, 'submit');
-    } else {
-        window.location.href = '/hardware';
-    }
-};
+window.clearDashboardFilters = window.clearFilters;
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {

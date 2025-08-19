@@ -120,7 +120,7 @@
                                         All-in-One PC
                                     </option>
                                     <option value="Backpack" {{ 'selected' if hardware and hardware.model.value == 'Backpack' }}>
-                                        Backpack PC
+                                        Backpack
                                     </option>
                                     <option value="DockingStation" {{ 'selected' if hardware and hardware.model.value == 'DockingStation' }}>
                                         Docking Station
@@ -175,9 +175,9 @@
                                        id="ip" 
                                        name="ip" 
                                        value="{{ hardware.ip if hardware else '' }}"
-                                       placeholder="e.g., 192.168.1.100"
-                                       pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$">
-                                <div class="invalid-feedback">Enter a valid IPv4 address.</div>
+                                       placeholder="e.g., 192.168.1.100 or DHCP"
+                                       pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|DHCP$">
+                                <div class="invalid-feedback">Enter a valid IPv4 address or 'DHCP'.</div>
                             </div>
                             <div class="col-md-6">
                                 <label for="mac" class="form-label">MAC Address</label>
@@ -261,17 +261,15 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="admin" class="form-label">
-                                    Worker <span class="text-danger">*</span>
+                                    Worker <span class="text-muted"></span>
                                 </label>
                                 <input type="text" 
                                        class="form-control" 
                                        id="admin" 
                                        name="admin" 
-                                       value="{{ hardware.admin if hardware else '' }}"
-                                       placeholder="e.g., worker@company.com"
-                                       required>
-                                <div class="invalid-feedback">Worker is required.</div>
-                            </div>
+                                       value="{{ current_user.username if current_user else 'Current user will be set automatically' }}"
+                                       readonly
+                                       style="background-color: #f8f9fa; cursor: not-allowed;">                            </div>
                             <div class="col-md-6">
                                 <div class="form-check mt-4">
                                     <input class="form-check-input" 

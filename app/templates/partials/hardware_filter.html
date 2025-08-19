@@ -1,0 +1,128 @@
+<!-- Reusable Hardware Filter Component -->
+<form id="{{ form_id or 'hardware-filter-form' }}" 
+      hx-get="/hardware" 
+      hx-target="{{ target or '#hardware-table-container' }}" 
+      hx-trigger="input delay:300ms, change, search, submit"
+      hx-indicator="{{ indicator or '#search-loading' }}"
+      hx-push-url="true" 
+      autocomplete="off"
+      class="{{ form_class or '' }}">
+    
+    <div class="row g-3">
+        <!-- Search Input -->
+        <div class="col-md-4">
+            <label for="{{ search_id or 'search' }}" class="form-label">{{ search_label or 'Search' }}</label>
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" 
+                       class="form-control" 
+                       id="{{ search_id or 'search' }}" 
+                       name="search" 
+                       placeholder="{{ search_placeholder or 'Hostname, IP, MAC, Serial...' }}"
+                       value="{{ search_query or '' }}">
+            </div>
+        </div>
+        
+        <!-- Status Filter -->
+        <div class="col-md-3">
+            <label class="form-label">Status Filter</label>
+            <div class="status-filter-container">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="status" value="IN_STOCK" 
+                                   id="{{ status_prefix or 'status' }}-in-stock" {{ 'checked' if 'IN_STOCK' in status_filter }}>
+                            <label class="form-check-label" for="{{ status_prefix or 'status' }}-in-stock">
+                                <span class="status-badge status-in-stock me-1"></span>In Stock
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="status" value="RESERVED" 
+                                   id="{{ status_prefix or 'status' }}-reserved" {{ 'checked' if 'RESERVED' in status_filter }}>
+                            <label class="form-check-label" for="{{ status_prefix or 'status' }}-reserved">
+                                <span class="status-badge status-reserved me-1"></span>Reserved
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="status" value="IMAGING" 
+                                   id="{{ status_prefix or 'status' }}-imaging" {{ 'checked' if 'IMAGING' in status_filter }}>
+                            <label class="form-check-label" for="{{ status_prefix or 'status' }}-imaging">
+                                <span class="status-badge status-imaging me-1"></span>Imaging
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="status" value="SHIPPED" 
+                                   id="{{ status_prefix or 'status' }}-shipped" {{ 'checked' if 'SHIPPED' in status_filter }}>
+                            <label class="form-check-label" for="{{ status_prefix or 'status' }}-shipped">
+                                <span class="status-badge status-shipped me-1"></span>Shipped
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="status" value="COMPLETED" 
+                                   id="{{ status_prefix or 'status' }}-completed" {{ 'checked' if 'COMPLETED' in status_filter }}>
+                            <label class="form-check-label" for="{{ status_prefix or 'status' }}-completed">
+                                <span class="status-badge status-completed me-1"></span>Completed
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Model Filter -->
+        <div class="col-md-2">
+            <label for="{{ model_id or 'model' }}" class="form-label">Model</label>
+            <select class="form-select" id="{{ model_id or 'model' }}" name="model">
+                <option value="">{{ model_all_label or 'All' }}</option>
+                <option value="Notebook" {{ 'selected' if model_filter == 'Notebook' }}>Notebook</option>
+                <option value="MFF" {{ 'selected' if model_filter == 'MFF' }}>MFF</option>
+                <option value="AllInOne" {{ 'selected' if model_filter == 'AllInOne' }}>All-in-One PC</option>
+                <option value="Backpack" {{ 'selected' if model_filter == 'Backpack' }}>Backpack</option>
+                <option value="DockingStation" {{ 'selected' if model_filter == 'DockingStation' }}>Docking Station</option>
+                <option value="Monitor" {{ 'selected' if model_filter == 'Monitor' }}>Monitor</option>
+            </select>
+        </div>
+        
+        <!-- Center Filter -->
+        <div class="col-md-2">
+            <label for="{{ center_id or 'center' }}" class="form-label">Center</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="{{ center_id or 'center' }}" 
+                   name="center" 
+                   placeholder="{{ center_placeholder or 'Filter by center' }}"
+                   value="{{ center_filter or '' }}">
+        </div>
+        
+        <!-- Clear Button -->
+        <div class="col-md-1">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-grid">
+                <button type="button" 
+                        class="btn btn-outline-secondary"
+                        onclick="clearFilters()">
+                    <i class="fas fa-times me-1"></i>
+                    Clear
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Indicator -->
+    <div id="{{ indicator_id or 'search-loading' }}" class="htmx-indicator mt-2">
+        <div class="d-flex align-items-center text-muted">
+            <div class="loading-spinner me-2"></div>
+            <small>{{ loading_text or 'Searching...' }}</small>
+        </div>
+    </div>
+</form>
