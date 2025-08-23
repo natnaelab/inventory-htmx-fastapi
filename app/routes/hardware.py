@@ -23,7 +23,7 @@ router = APIRouter()
 async def hardware_list(
     request: Request,
     db: Session = Depends(get_session),
-    current_user = Depends(get_current_user),
+    current_user = Depends(require_visitor),
     search: Optional[str] = Query(None),
     status: Optional[list[str]] = Query(None),
     model: Optional[str] = Query(None),

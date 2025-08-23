@@ -9,16 +9,13 @@ from app.core.db import get_session
 from app.core.templates import templates
 from app.models.hardware import Hardware, StatusEnum
 from app.services.stock import StockService
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import require_visitor
 
 router = APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse)
-async def dashboard(request: Request, db: Session = Depends(get_session)):
-    current_user = get_current_user(request)
-    total_count = db.query(Hardware).count()
-
+async def dashboard(request: Request, db: Session = Depends(get_session), current_user = Depends(require_visitor)):
     status_counts: Dict[str, int] = {}
     for status in StatusEnum:
         count = db.query(Hardware).filter(Hardware.status == status).count()

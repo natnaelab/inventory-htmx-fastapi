@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 class AuthenticationMiddleware(BaseHTTPMiddleware):
     DEFAULT_PUBLIC_PATHS = [
-        '/',
         '/login',
         '/logout', 
         '/static/',
@@ -31,9 +30,11 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         )
 
     def _set_user_state(self, request: Request, payload: dict) -> None:
-        request.state.user_id = payload.get('user_id')
-        request.state.username = payload.get('username')
-        request.state.role = payload.get('role')
+        request.state.user = {
+            "user_id": payload.get('user_id'),
+            "username": payload.get('username'),
+            "role": payload.get('role')
+        }
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         if self._is_public_path(request.url.path):
