@@ -7,21 +7,27 @@ from app.routes.hardware import router as hardware_router
 from app.routes.api import router as api_router
 from app.routes.pages import router as pages_router
 from app.routes.auth import router as auth_router
-from app.middleware.logging import AuditLoggingMiddleware
+from app.middleware.audit_logging import AuditLoggingMiddleware
 from app.middleware.auth import AuthenticationMiddleware
+
+from app.audit.listeners import initialize_audit_listeners
+
 
 logger = logging.getLogger(__name__)
 
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     pass
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("App starting up 🚀")
+    logger.info("Initializing audit listeners...")
+    initialize_audit_listeners()
+    logger.info("Audit listeners initialized.")
+    yield
+    logger.info("App shutting down...")
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Inventory Management System", version="1.0.0", 
-                #   lifespan=lifespan
-                  )
+    app = FastAPI(title="Inventory Management System", version="1.0.0", lifespan=lifespan)
 
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(AuditLoggingMiddleware)

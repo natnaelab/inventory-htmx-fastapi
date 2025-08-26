@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Change History for {{ hardware.name if hardware else 'Item' }} - Inventory Management System{% endblock %}
+
+{% block header %}
+<div class="row align-items-center mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/hardware">Hardware</a></li>
+                <li class="breadcrumb-item active">Change History</li>
+            </ol>
+        </nav>
+        <h1 class="mb-0">
+            <i class="fas fa-history text-primary me-3"></i>
+            Change History
+        </h1>
+        {% if hardware %}
+        <p class="text-muted mb-0">Showing all recorded changes for <strong>{{ hardware.name }}</strong> (ID: {{ hardware.id }})</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{% if error_message %}
+<div class="alert alert-danger mb-4">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error_message }}
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        {% if history %}
+        <div class="list-group list-group-flush">
+            {% for log in history %}
+            <div class="list-group-item py-3">
+                <div class="d-flex w-100 justify-content-between mb-2">
+                    <div>
+                        {% if log.action == 'CREATE' %}
+                            <span class="badge bg-success me-2">CREATE</span>
+                            <strong>{{ log.username or 'System' }}</strong> created this item.
+                        {% elif log.action == 'UPDATE' %}
+                            <span class="badge bg-primary me-2">UPDATE</span>
+                            <strong>{{ log.username or 'System' }}</strong> made changes.
+                        {% elif log.action == 'DELETE' %}
+                            <span class="badge bg-danger me-2">DELETE</span>
+                            <strong>{{ log.username or 'System' }}</strong> deleted this item.
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">{{ log.timestamp[:19] if log.timestamp else 'N/A' }} UTC</small>
+                </div>
+                
+                <!-- Detailed Changes Display -->
+                <div class="ps-4 pt-2">
+                    {% if log.action == 'UPDATE' and log.changes %}
+                        <ul class="list-unstyled mb-0 small">
+                        {% for field, values in log.changes.items() %}
+                            <li>
+                                Field <strong>{{ field }}</strong> changed:
+                                <code class="text-danger">{{ values.old if values.old is not none else 'NULL' }}</code>
+                                →
+                                <code class="text-success">{{ values.new if values.new is not none else 'NULL' }}</code>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% elif log.action == 'CREATE' and log.changes.new_values %}
+                        <p class="small text-muted mb-1">Initial values:</p>
+                        <ul class="list-unstyled mb-0 small">
+                        {% for field, value in log.changes.new_values.items() %}
+                           <li><strong>{{ field }}</strong> was set to <code>{{ value if value is not none else 'NULL' }}</code></li>
+                        {% endfor %}
+                        </ul>
+                    {% elif log.action == 'DELETE' %}
+                        <p class="small text-muted mb-0">The item was permanently removed.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-file-alt fa-3x mb-3"></i>
+            <p>No detailed change history found for this item.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

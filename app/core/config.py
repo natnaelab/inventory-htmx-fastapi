@@ -3,21 +3,23 @@ import os
 
 class Settings:
     def __init__(self):
-        self.base_url = os.getenv('BASE_URL', 'http://localhost:8000')
-        self.secret_key = os.getenv('SECRET_KEY', 'secret-key')
-        self.app_host = os.getenv('APP_HOST', '0.0.0.0')
-        self.app_port = os.getenv('APP_PORT', '8000')
-        self.debug = os.getenv('DEBUG', 'false')
+        # required environment variables, it will raise KeyError if not found
+        self.base_url = os.environ['BASE_URL']
+        self.secret_key = os.environ['SECRET_KEY']
+        self.app_host = os.environ['APP_HOST']
+        self.app_port = os.environ['APP_PORT']
+        self.debug = os.environ['DEBUG']
 
-        self.ldap_url = os.getenv("LDAP_URL")
-        self.ldap_base_dn = os.getenv("LDAP_BASE_DN")
-        self.ldap_bind_dn = os.getenv("LDAP_BIND_DN")
-        self.ldap_bind_password = os.getenv("LDAP_BIND_PASSWORD")
-        self.ldap_domain = os.getenv("LDAP_DOMAIN")
+        self.ldap_url = os.environ["LDAP_URL"]
+        self.ldap_base_dn = os.environ["LDAP_BASE_DN"]
+        self.ldap_bind_dn = os.environ["LDAP_BIND_DN"]
+        self.ldap_bind_password = os.environ["LDAP_BIND_PASSWORD"]
+        self.ldap_domain = os.environ["LDAP_DOMAIN"]
 
-        self.admin_group = os.getenv("ADMIN_GROUP")
-        self.visitor_group = os.getenv("VISITOR_GROUP")
+        self.admin_group = os.environ["ADMIN_GROUP"]
+        self.visitor_group = os.environ["VISITOR_GROUP"]
 
+        # optional environment variables, if not set defaults will be used
         self.session_expire_hours = int(os.getenv('SESSION_EXPIRE_HOURS', '8'))
         self.session_cookie_name = os.getenv('SESSION_COOKIE_NAME', 'inventory_session')
 

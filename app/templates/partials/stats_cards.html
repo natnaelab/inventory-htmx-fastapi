@@ -129,7 +129,9 @@
                             </div>
                             <div class="flex-grow-1 d-flex flex-column justify-content-center">
                                 <div class="text-muted fw-medium mb-1" style="font-size: 0.85rem;">{{ model_name }}</div>
+                                {% if is_low %}
                                 <small class="text-muted">Threshold: {{ threshold }}</small>
+                                {% endif %}
                             </div>
                             {% if is_low %}
                             <div class="mt-2">

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
-from typing import Optional
-from sqlmodel import Field, SQLModel, text, Column, DateTime, Text
+from typing import Any, Dict, Optional
+from sqlmodel import Field, SQLModel, text, Column, DateTime, Text, JSON
 
 
 class AuditLog(SQLModel, table=True):
@@ -22,9 +22,14 @@ class AuditLog(SQLModel, table=True):
 
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
-        sa_column=Column("timestamp", DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), index=True)
+        sa_column=Column("timestamp", DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), index=True),
     )
 
     error_message: Optional[str] = Field(default=None, sa_column=Column("error_message", Text))
     request_body_size: Optional[int] = Field(default=None)
     response_body_size: Optional[int] = Field(default=None)
+
+    action: Optional[str] = Field(default=None, max_length=50, index=True)
+    entity_name: Optional[str] = Field(default=None, max_length=255, index=True)
+    entity_id: Optional[str] = Field(default=None, max_length=255, index=True)
+    changes: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
