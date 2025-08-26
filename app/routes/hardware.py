@@ -1,4 +1,5 @@
 import logging
+import math
 from datetime import datetime
 from typing import Optional
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/hardware", response_class=HTMLResponse)
+@router.get("", response_class=HTMLResponse)
 async def hardware_list(
     request: Request,
     db: Session = Depends(get_session),
@@ -76,14 +77,14 @@ async def hardware_list(
         raise HTTPException(status_code=500, detail="Failed to load hardware list")
 
 
-@router.get("/hardware/add", response_class=HTMLResponse)
+@router.get("/add", response_class=HTMLResponse)
 async def add_hardware_form(request: Request, current_user=Depends(require_admin)):
     return templates.TemplateResponse(
         "hardware_form.html", {"request": request, "hardware": None, "current_user": current_user}
     )
 
 
-@router.post("/hardware/add")
+@router.post("/add")
 async def add_hardware(
     request: Request,
     db: Session = Depends(get_session),
@@ -136,7 +137,7 @@ async def add_hardware(
         raise HTTPException(status_code=400, detail="Failed to add hardware")
 
 
-@router.get("/hardware/{hardware_id}/edit", response_class=HTMLResponse)
+@router.get("/{hardware_id}/edit", response_class=HTMLResponse)
 async def edit_hardware_form(
     request: Request, hardware_id: int, db: Session = Depends(get_session), current_user=Depends(require_admin)
 ):
@@ -154,7 +155,7 @@ async def edit_hardware_form(
         raise HTTPException(status_code=500, detail="Failed to load hardware edit form")
 
 
-@router.post("/hardware/{hardware_id}/edit")
+@router.post("/{hardware_id}/edit")
 async def edit_hardware(
     request: Request,
     hardware_id: int,
@@ -211,7 +212,7 @@ async def edit_hardware(
         raise HTTPException(status_code=400, detail="Failed to edit hardware")
 
 
-@router.delete("/hardware/{hardware_id}")
+@router.delete("/{hardware_id}")
 async def delete_hardware(
     request: Request, hardware_id: int, db: Session = Depends(get_session), current_user=Depends(require_admin)
 ):
@@ -242,7 +243,7 @@ async def delete_hardware(
         raise HTTPException(status_code=400, detail="Failed to delete hardware")
 
 
-@router.get("/hardware/{hardware_id}", response_class=HTMLResponse)
+@router.get("/{hardware_id}", response_class=HTMLResponse)
 async def hardware_detail(
     request: Request, hardware_id: int, db: Session = Depends(get_session), current_user=Depends(get_current_user)
 ):
@@ -261,7 +262,7 @@ async def hardware_detail(
         raise HTTPException(status_code=500, detail="Failed to load hardware details")
 
 
-@router.get("/hardware/export/excel")
+@router.get("/export/excel")
 async def export_hardware_excel(
     db: Session = Depends(get_session),
     current_user=Depends(get_current_user),
@@ -291,12 +292,12 @@ async def export_hardware_excel(
         raise HTTPException(status_code=500, detail="Failed to export data")
 
 
-@router.get("/hardware-import", response_class=HTMLResponse)
+@router.get("/import", response_class=HTMLResponse)
 async def bulk_import_form(request: Request, current_user=Depends(require_admin)):
     return templates.TemplateResponse("bulk_import.html", {"request": request})
 
 
-@router.post("/hardware-import")
+@router.post("/import")
 async def bulk_import(
     request: Request,
     db: Session = Depends(get_session),
@@ -324,7 +325,7 @@ async def bulk_import(
         raise HTTPException(status_code=500, detail=f"Failed to import file: {str(e)}")
 
 
-@router.get("/hardware/{hardware_id}/qr")
+@router.get("/{hardware_id}/qr")
 async def generate_qr_code(
     hardware_id: int, db: Session = Depends(get_session), current_user=Depends(require_visitor)
 ):
@@ -347,7 +348,7 @@ async def generate_qr_code(
         raise HTTPException(status_code=500, detail="Failed to generate QR code")
 
 
-@router.get("/hardware/{hardware_id}/label")
+@router.get("/{hardware_id}/label")
 async def generate_label_csv(
     hardware_id: int, db: Session = Depends(get_session), current_user=Depends(require_visitor)
 ):
@@ -368,7 +369,7 @@ async def generate_label_csv(
         raise HTTPException(status_code=500, detail="Failed to generate label CSV")
 
 
-@router.post("/hardware/{hardware_id}/status")
+@router.post("/{hardware_id}/status")
 async def quick_status_change(
     hardware_id: int,
     db: Session = Depends(get_session),
@@ -390,7 +391,7 @@ async def quick_status_change(
         raise HTTPException(status_code=500, detail="Failed to change status")
 
 
-@router.post("/hardware/{hardware_id}/cycle-status")
+@router.post("/{hardware_id}/cycle-status")
 async def cycle_status(
     request: Request,
     hardware_id: int,
@@ -422,9 +423,13 @@ async def cycle_status(
         raise HTTPException(status_code=500, detail="Failed to cycle status")
 
 
-@router.get("/hardware/{hardware_id}/history", response_class=HTMLResponse)
+@router.get("/{hardware_id}/history", response_class=HTMLResponse)
 async def hardware_history_view(
-    hardware_id: int, request: Request, db: Session = Depends(get_session), current_user=Depends(require_admin)
+    hardware_id: int,
+    request: Request,
+    db: Session = Depends(get_session),
+    current_user=Depends(require_admin),
+    page: int = Query(1, ge=1),
 ):
     try:
         audit_service = AuditService(db)
@@ -434,15 +439,28 @@ async def hardware_history_view(
         if not hardware_item:
             return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
 
-        history_logs = audit_service.get_entity_history(entity_name="Hardware", entity_id=str(hardware_id))
-        if history_logs is None:
-            history_logs = []
+        PAGE_SIZE = 15
+
+        history_data = audit_service.get_entity_history(
+            entity_name="Hardware", entity_id=str(hardware_id), page=page, limit=PAGE_SIZE
+        )
+        if history_data is None:
+            history_data = {"logs": [], "total": 0}
+
+        total_pages = math.ceil(history_data["total"] / PAGE_SIZE)
 
         return templates.TemplateResponse(
-            "hardware_history.html", {"request": request, "hardware": hardware_item, "history": history_logs}
+            "hardware_history.html",
+            {
+                "request": request,
+                "hardware": hardware_item,
+                "history": history_data["logs"],
+                "current_page": page,
+                "total_pages": total_pages,
+            },
         )
     except Exception as e:
-        logger.error(f"Error loading history for hardware {hardware_id}: {e}")
+        logger.error(f"Error getting entity history for Hardware {hardware_id}: {e}")
 
         return templates.TemplateResponse(
             "hardware_history.html",

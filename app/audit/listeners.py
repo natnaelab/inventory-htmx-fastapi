@@ -73,15 +73,15 @@ def before_flush_listener(session: Session, flush_context, instances):
 
 def after_flush_listener(session: Session, flush_context):
     pending_logs = session.info.get("pending_audit_logs", [])
-    print("pending logs", pending_logs)
     if not pending_logs:
         return
 
     for log_info in pending_logs:
         instance = log_info["instance"]
-        print("instance", instance)
-        pk_val = inspect(instance).identity[0] if inspect(instance).identity else None
-        print("pk val", pk_val)
+
+        pk_name = inspect(instance.__class__).primary_key[0].name
+        pk_val = getattr(instance, pk_name, None)
+
         if pk_val:
             log = AuditLog(
                 action="CREATE",

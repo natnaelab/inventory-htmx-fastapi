@@ -12,21 +12,20 @@ class AuditService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_entity_history(self, entity_name: str, entity_id: str, limit: int = 100) -> List[Dict]:
+    def get_entity_history(self, entity_name: str, entity_id: str, page: int = 1, limit: int = 100) -> List[Dict]:
         try:
-            history_logs = (
-                self.db.query(AuditLog)
-                .filter(
-                    AuditLog.entity_name == entity_name,
-                    AuditLog.entity_id == str(entity_id),
-                    AuditLog.action.in_(["CREATE", "UPDATE", "DELETE"]),
-                )
-                .order_by(AuditLog.timestamp.desc())
-                .limit(limit)
-                .all()
+            base_query = self.db.query(AuditLog).filter(
+                AuditLog.entity_name == entity_name,
+                AuditLog.entity_id == str(entity_id),
+                AuditLog.action.in_(["CREATE", "UPDATE", "DELETE"]),
             )
 
-            return [
+            total_count = base_query.count()
+
+            offset = (page - 1) * limit
+            history_logs = base_query.order_by(AuditLog.timestamp.desc()).offset(offset).limit(limit).all()
+
+            results = [
                 {
                     "timestamp": log.timestamp.isoformat(),
                     "username": log.username,
@@ -36,6 +35,8 @@ class AuditService:
                 }
                 for log in history_logs
             ]
+
+            return {"logs": results, "total": total_count}
         except Exception as e:
             logger.error(f"Error getting entity history for {entity_name} {entity_id}: {e}")
             return None
@@ -140,4 +141,46 @@ class AuditService:
             ]
         except Exception as e:
             logger.error(f"Error getting user activity: {e}")
+            return None
+
+    def get_global_activity_feed(
+        self,
+        page: int = 1,
+        limit: int = 20,
+        username: Optional[str] = None,
+        action_type: Optional[str] = None,
+        entity_name: Optional[str] = None
+    ) -> Dict:
+        try:
+            query = self.db.query(AuditLog).filter(AuditLog.action.isnot(None))
+
+            if username:
+                query = query.filter(AuditLog.username.ilike(f"%{username}%"))
+            
+            if action_type:
+                query = query.filter(AuditLog.action == action_type)
+
+            if entity_name:
+                query = query.filter(AuditLog.entity_name == entity_name)
+
+            total_count = query.count()
+
+            offset = (page - 1) * limit
+            activity_logs = query.order_by(AuditLog.timestamp.desc()).offset(offset).limit(limit).all()
+
+            results = [
+                {
+                    'timestamp': log.timestamp.isoformat(),
+                    'username': log.username,
+                    'action': log.action,
+                    'entity_name': log.entity_name,
+                    'entity_id': log.entity_id,
+                    'changes': log.changes,
+                } for log in activity_logs
+            ]
+            
+            return {"logs": results, "total": total_count}
+
+        except Exception as e:
+            logger.error(f"Error getting global activity feed: {e}")
             return None

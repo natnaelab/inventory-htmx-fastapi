@@ -1,8 +1,10 @@
 import logging
-from urllib.request import Request
-from fastapi import APIRouter, Depends
+import math
+from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.orm import Session
 from fastapi.responses import HTMLResponse
+
+from typing import Optional
 
 from app.core.templates import templates
 from app.core.db import get_session
@@ -11,7 +13,7 @@ from app.dependencies.auth import require_admin
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/audit/")
+router = APIRouter(prefix="/audit")
 
 
 @router.get("/logs", response_class=HTMLResponse)
@@ -58,3 +60,50 @@ async def audit_logs_view(request: Request, db: Session = Depends(get_session), 
                 "error_message": f"Error loading audit logs: {str(e)}",
             },
         )
+
+
+@router.get("/activity-feed", response_class=HTMLResponse)
+async def global_activity_feed_view(
+    request: Request,
+    db: Session = Depends(get_session),
+    current_user = Depends(require_admin),
+    page: int = Query(1, ge=1),
+    username: Optional[str] = Query(None),
+    action: Optional[str] = Query(None),
+    entity: Optional[str] = Query(None)
+):
+    try:
+        audit_service = AuditService(db)
+        PAGE_SIZE = 25
+
+        feed_data = audit_service.get_global_activity_feed(
+            page=page,
+            limit=PAGE_SIZE,
+            username=username,
+            action_type=action,
+            entity_name=entity
+        )
+        
+        if feed_data is None:
+            feed_data = {"logs": [], "total": 0}
+        
+        total_pages = math.ceil(feed_data["total"] / PAGE_SIZE)
+        
+        return templates.TemplateResponse(
+            "admin_activity_feed.html",
+            {
+                "request": request,
+                "activity_logs": feed_data["logs"],
+                "current_page": page,
+                "total_pages": total_pages,
+
+                "filters": {
+                    "username": username,
+                    "action": action,
+                    "entity": entity,
+                }
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error getting global activity feed: {e}")
+        return None
