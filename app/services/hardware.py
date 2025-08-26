@@ -6,6 +6,8 @@ from typing import Optional, List, Dict, Any, Tuple
 
 import pandas as pd
 import qrcode
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.table import Table, TableStyleInfo
 from sqlalchemy.orm import Session
 
 from app.models.hardware import Hardware, StatusEnum, ModelEnum
@@ -176,13 +178,14 @@ class HardwareService:
         return True
     
     def export_hardware_to_excel(self,
-                                search: Optional[str] = None,
-                                status: Optional[List[str]] = None,
-                                model: Optional[str] = None,
-                                center: Optional[str] = None) -> io.BytesIO:
+                                 search: Optional[str] = None,
+                                 status: Optional[List[str]] = None,
+                                 model: Optional[str] = None,
+                                 center: Optional[str] = None) -> io.BytesIO:
+
         query, _ = self.get_filtered_hardware_query(search, status, model, center)
         hardware_list = query.order_by(Hardware.updated_at.desc()).all()
-        
+
         data = []
         for hw in hardware_list:
             data.append({
@@ -205,25 +208,48 @@ class HardwareService:
                 'Updated At': hw.updated_at.strftime('%Y-%m-%d %H:%M:%S') if hw.updated_at else '',
                 'Shipped At': hw.shipped_at.strftime('%Y-%m-%d %H:%M:%S') if hw.shipped_at else '',
             })
-        
+
+        if not data:
+            return io.BytesIO()
+
         df = pd.DataFrame(data)
         
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Hardware Inventory', index=False)
-            
-            workbook = writer.book
+
             worksheet = writer.sheets['Hardware Inventory']
+
+            num_rows, num_cols = df.shape
+
+            last_col_letter = get_column_letter(num_cols)
+            table_ref = f"A1:{last_col_letter}{num_rows + 1}"
+
+            display_name = f"HardwareTabelle_{datetime.now().strftime('%Y%m%d%H%M%S')}"
             
-            for column in worksheet.columns:
+            table = Table(displayName=display_name, ref=table_ref)
+
+            style = TableStyleInfo(
+                name="TableStyleMedium9",
+                showFirstColumn=False,
+                showLastColumn=False,
+                showRowStripes=True,
+                showColumnStripes=False,
+            )
+            table.tableStyleInfo = style
+
+            worksheet.add_table(table)
+            
+            for column_cells in worksheet.columns:
                 max_length = 0
-                column_letter = column[0].column_letter
-                for cell in column:
+                column_letter = column_cells[0].column_letter
+                for cell in column_cells:
                     try:
                         if len(str(cell.value)) > max_length:
                             max_length = len(str(cell.value))
                     except:
                         pass
+                
                 adjusted_width = min(max_length + 2, 50)
                 worksheet.column_dimensions[column_letter].width = adjusted_width
         

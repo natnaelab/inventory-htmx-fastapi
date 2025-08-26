@@ -137,6 +137,38 @@ async def add_hardware(
         raise HTTPException(status_code=400, detail="Failed to add hardware")
 
 
+@router.get("/import", response_class=HTMLResponse)
+async def bulk_import_form(request: Request, current_user=Depends(require_admin)):
+    return templates.TemplateResponse("bulk_import.html", {"request": request})
+
+
+@router.post("/import")
+async def bulk_import(
+    request: Request,
+    db: Session = Depends(get_session),
+    current_user=Depends(require_admin),
+    file: UploadFile = File(...),
+):
+    try:
+        hardware_service = HardwareService(db)
+
+        filename = file.filename.lower()
+        if not (filename.endswith(".csv") or filename.endswith(".xlsx") or filename.endswith(".xls")):
+            raise HTTPException(status_code=400, detail="File must be a CSV or Excel file (.csv, .xlsx, .xls)")
+
+        contents = await file.read()
+
+        results = hardware_service.import_hardware_from_file(contents, filename, current_user)
+
+        return templates.TemplateResponse("bulk_import_results.html", {"request": request, "results": results})
+
+    except ValueError as e:
+        logger.error(f"Invalid file format: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error importing file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to import file: {str(e)}")
+
 @router.get("/{hardware_id}/edit", response_class=HTMLResponse)
 async def edit_hardware_form(
     request: Request, hardware_id: int, db: Session = Depends(get_session), current_user=Depends(require_admin)
@@ -290,39 +322,6 @@ async def export_hardware_excel(
     except Exception as e:
         logger.error(f"Error exporting hardware to Excel: {e}")
         raise HTTPException(status_code=500, detail="Failed to export data")
-
-
-@router.get("/import", response_class=HTMLResponse)
-async def bulk_import_form(request: Request, current_user=Depends(require_admin)):
-    return templates.TemplateResponse("bulk_import.html", {"request": request})
-
-
-@router.post("/import")
-async def bulk_import(
-    request: Request,
-    db: Session = Depends(get_session),
-    current_user=Depends(require_admin),
-    file: UploadFile = File(...),
-):
-    try:
-        hardware_service = HardwareService(db)
-
-        filename = file.filename.lower()
-        if not (filename.endswith(".csv") or filename.endswith(".xlsx") or filename.endswith(".xls")):
-            raise HTTPException(status_code=400, detail="File must be a CSV or Excel file (.csv, .xlsx, .xls)")
-
-        contents = await file.read()
-
-        results = hardware_service.import_hardware_from_file(contents, filename, current_user)
-
-        return templates.TemplateResponse("bulk_import_results.html", {"request": request, "results": results})
-
-    except ValueError as e:
-        logger.error(f"Invalid file format: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Error importing file: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to import file: {str(e)}")
 
 
 @router.get("/{hardware_id}/qr")
