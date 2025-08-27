@@ -20,10 +20,10 @@
             {% if model_filter %}
                 {% set model_labels = {
                     'Notebook': 'Notebook',
-                    'MFF': 'MFF (Mini Form Factor)',
-                    'AllInOne': 'All-in-One PC',
-                    'Backpack': 'Backpack PC',
-                    'Dockingstation': 'Docking Station',
+                    'MFF': 'MFF (Micro Form Factor)',
+                    'AllInOne': 'All-in-One',
+                    'Backpack': 'Backpack',
+                    'DockingStation': 'Docking Station',
                     'Monitor': 'Monitor'
                 } %}
                 Showing devices of type: <strong>{{ model_labels.get(model_filter, model_filter) }}</strong>
@@ -34,6 +34,7 @@
             {% endif %}
         </p>
     </div>
+    {% if current_user and current_user.role == 'administrator' %}
     <div class="col-auto">
         <div class="d-flex gap-2">
             <a href="/hardware/add" class="btn btn-primary">
@@ -42,6 +43,7 @@
             </a>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -49,83 +51,7 @@
 <!-- Search and Filter Section -->
 <div class="card shadow-custom mb-4">
     <div class="card-body">
-        <form id="hardware-filter-form" hx-get="/hardware" 
-              hx-target="#hardware-table-container" 
-              hx-trigger="input delay:300ms, change, search, submit"
-              hx-indicator="#search-loading"
-              hx-push-url="true" autocomplete="off">
-            
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label for="search" class="form-label">Search</label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" 
-                               class="form-control" 
-                               id="search" 
-                               name="search" 
-                               placeholder="Hostname, IP, MAC, Serial..."
-                               value="{{ search_query or '' }}">
-                    </div>
-                </div>
-                
-                <div class="col-md-2">
-                    <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status" autocomplete="off">
-                        <option value="">All</option>
-                        <option value="IN_STOCK" {{ 'selected' if status_filter == 'IN_STOCK' }}>In Stock</option>
-                        <option value="RESERVED" {{ 'selected' if status_filter == 'RESERVED' }}>Reserved</option>
-                        <option value="IMAGING" {{ 'selected' if status_filter == 'IMAGING' }}>Imaging</option>
-                        <option value="SHIPPED" {{ 'selected' if status_filter == 'SHIPPED' }}>Shipped</option>
-                        <option value="COMPLETED" {{ 'selected' if status_filter == 'COMPLETED' }}>Completed</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label for="model" class="form-label">Model</label>
-                    <select class="form-select" id="model" name="model">
-                        <option value="">All</option>
-                        <option value="Notebook" {{ 'selected' if model_filter == 'Notebook' }}>Notebook</option>
-                        <option value="MFF" {{ 'selected' if model_filter == 'MFF' }}>MFF</option>
-                        <option value="AllInOne" {{ 'selected' if model_filter == 'AllInOne' }}>All-in-One PC</option>
-                        <option value="Backpack" {{ 'selected' if model_filter == 'Backpack' }}>Backpack</option>
-                        <option value="DockingStation" {{ 'selected' if model_filter == 'DockingStation' }}>Docking Station</option>
-                        <option value="Monitor" {{ 'selected' if model_filter == 'Monitor' }}>Monitor</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-2">
-                    <label for="center" class="form-label">Center</label>
-                    <input type="text" 
-                           class="form-control" 
-                           id="center" 
-                               name="center" 
-                               placeholder="Filter by center"
-                               value="{{ center_filter or '' }}">
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-grid">
-                        <button type="button" 
-                                class="btn btn-outline-secondary"
-                                onclick="clearFilters()">
-                            <i class="fas fa-times me-1"></i>
-                            Clear
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="search-loading" class="htmx-indicator mt-2">
-                <div class="d-flex align-items-center text-muted">
-                    <div class="loading-spinner me-2"></div>
-                    <small>Searching...</small>
-                </div>
-            </div>
-        </form>
+        {% include "partials/hardware_filter.html" with context %}
     </div>
 </div>
 

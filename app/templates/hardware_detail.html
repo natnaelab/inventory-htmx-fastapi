@@ -4,7 +4,7 @@
 {% block nav_hardware %}active{% endblock %}
 
 {% block header %}
-<div class="row align-items-center mb-4">
+<div class="row align-items-start mb-4">
   <div class="col">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb mb-2">
@@ -13,17 +13,90 @@
         <li class="breadcrumb-item active">Details</li>
       </ol>
     </nav>
-    <h1 class="mb-0">
-      <i class="fas fa-eye text-primary me-3"></i>
-        {{ hardware.hostname }} | Hardware Details
-    </h1>
-    <p class="text-muted mb-0">View device information and activity</p>
+    <div class="d-flex align-items-center gap-3 mb-2">
+      <h1 class="mb-0">
+        <i class="fas fa-laptop text-primary me-2"></i>
+        {{ hardware.hostname }}
+      </h1>
+      <!-- Current Status Badge -->
+      <span class="status-pill status-{{ (hardware.status.value|lower).replace('_','-') if hardware.status else 'unknown' }}" title="Current Status">
+        <span class="status-badge status-{{ (hardware.status.value|lower).replace('_','-') if hardware.status else 'unknown' }}"></span>
+        {% if hardware.status %}
+          {% if hardware.status.value == 'IN_STOCK' %}In Stock
+          {% elif hardware.status.value == 'RESERVED' %}Reserved
+          {% elif hardware.status.value == 'IMAGING' %}Imaging
+          {% elif hardware.status.value == 'SHIPPED' %}Shipped
+          {% elif hardware.status.value == 'COMPLETED' %}Completed
+          {% else %}{{ hardware.status.value }}
+          {% endif %}
+        {% else %}Unknown
+        {% endif %}
+      </span>
+    </div>
+    <p class="text-muted mb-0">{{ hardware.model.value if hardware.model else 'Unknown Model' }} | Serial: {{ hardware.serial_number }}</p>
   </div>
-  <div class="col-auto d-flex gap-2">
-    <a href="/hardware/{{ hardware.id }}/edit" class="btn btn-outline-primary">
-      <i class="fas fa-edit me-1"></i>
-      Edit
-    </a>
+</div>
+
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      {% if request.state and request.state.user and request.state.user.role == 'administrator' %}
+      <div class="me-3">
+        <small class="text-muted d-block mb-1">Quick Status Change:</small>
+        <div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-outline-success" 
+                  onclick="quickStatusChange('IN_STOCK')" title="Set to In Stock">
+            <i class="fas fa-box me-1"></i>In Stock
+          </button>
+          <button type="button" class="btn btn-outline-warning" 
+                  onclick="quickStatusChange('RESERVED')" title="Set to Reserved">
+            <i class="fas fa-bookmark me-1"></i>Reserved
+          </button>
+          <button type="button" class="btn btn-outline-info" 
+                  onclick="quickStatusChange('IMAGING')" title="Set to Imaging">
+            <i class="fas fa-compact-disc me-1"></i>Imaging
+          </button>
+          <button type="button" class="btn btn-outline-primary" 
+                  onclick="quickStatusChange('SHIPPED')" title="Set to Shipped">
+            <i class="fas fa-shipping-fast me-1"></i>Shipped
+          </button>
+          <button type="button" class="btn btn-outline-dark" 
+                  onclick="quickStatusChange('COMPLETED')" title="Set to Completed">
+            <i class="fas fa-check-circle me-1"></i>Completed
+          </button>
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Export Actions Section -->
+      <div class="me-3">
+        <small class="text-muted d-block mb-1">Export:</small>
+        <div class="btn-group btn-group-sm" role="group">
+          <a href="/hardware/{{ hardware.id }}/qr" class="btn btn-outline-secondary" 
+             title="Generate QR Code">
+            <i class="fas fa-qrcode me-1"></i>QR Code
+          </a>
+          <a href="/hardware/{{ hardware.id }}/label" class="btn btn-outline-secondary" 
+             title="Generate Label CSV">
+            <i class="fas fa-tags me-1"></i>Label
+          </a>
+        </div>
+      </div>
+      
+      {% if request.state and request.state.user and request.state.user.role == 'administrator' %}
+      <div>
+        <small class="text-muted d-block mb-1">Actions:</small>
+        <a href="/hardware/{{ hardware.id }}/edit" class="btn btn-primary btn-sm">
+          <i class="fas fa-edit me-1"></i>
+          Edit Hardware
+        </a>
+        <a href="/hardware/{{ hardware.id }}/history" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-history me-1"></i>
+          View History
+        </a>
+      </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -32,4 +105,28 @@
 <div id="hardware-details-container">
   {% include "partials/hardware_detail_content.html" %}
 </div>
+
+<script>
+function quickStatusChange(status) {
+  const formData = new FormData();
+  formData.append('status', status);
+
+  fetch('/hardware/{{ hardware.id }}/status', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      window.location.reload();
+    } else {
+      alert('Failed to change status: ' + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Failed to change status');
+  });
+}
+</script>
 {% endblock %}

@@ -26,3 +26,9 @@ uvicorn==0.34.3
 pydantic-settings==2.10.1
 python-dotenv==1.1.1
 alembic==1.16.4
+qrcode==8.0
+pandas==2.2.3
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-ldap==3.4.4
+

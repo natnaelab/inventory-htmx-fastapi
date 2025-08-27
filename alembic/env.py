@@ -29,6 +29,8 @@ if config.config_file_name is not None:
 # Import models so they are registered on SQLModel.metadata
 try:
     from app.models.hardware import Hardware  # noqa: F401
+    from app.models.audit_log import AuditLog  # noqa: F401
+    from app.models.user import User  # noqa: F401
 except ImportError:
     # It's okay to proceed; metadata may simply be empty if models can't be imported
     pass
