@@ -624,6 +624,80 @@ h6 {
   pointer-events: none;
 }
 
+/* Status Filter Container */
+.status-filter-container {
+  background-color: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  padding: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.status-filter-container .form-check {
+  margin-bottom: 0.5rem;
+  padding-left: 0;
+  display: flex;
+  align-items: center;
+}
+
+.status-filter-container .form-check:last-child {
+  margin-bottom: 0;
+}
+
+.status-filter-container .form-check-input {
+  margin-right: 0.5rem;
+  margin-top: 0;
+  margin-left: 0;
+  flex-shrink: 0;
+  position: static;
+}
+
+.status-filter-container .form-check-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  margin-bottom: 0;
+  padding-left: 0;
+}
+
+.status-filter-container .form-check-label:hover {
+  color: var(--gray-900);
+}
+
+.status-filter-container .form-check-input:checked + .form-check-label {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Status badge in filter labels */
+.status-filter-container .status-badge {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Override Bootstrap defaults for perfect alignment */
+.status-filter-container .form-check {
+  min-height: auto !important;
+}
+
+.status-filter-container .form-check-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(26, 54, 93, 0.25);
+}
+
+.status-filter-container .form-check-input:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
 /* Pagination */
 .pagination {
   margin-bottom: 0;

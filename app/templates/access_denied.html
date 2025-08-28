@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied - Inventory Management System{% endblock %}
+
+{% block header %}
+<div class="row align-items-center mb-4">
+    <div class="col text-center">
+        <h1 class="mb-0">
+            <i class="fas fa-ban text-danger me-3"></i>
+            Access Denied
+        </h1>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-shield-alt fa-4x text-danger mb-4"></i>
+                
+                <h3 class="text-danger mb-3">Permission Denied</h3>
+                
+                <p class="text-muted mb-4">
+                    You don't have the necessary permissions to perform this action. 
+                    This operation requires administrator privileges.
+                </p>
+                
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-home me-1"></i>
+                        Go to Dashboard
+                    </a>
+                    
+                    <a href="/hardware" class="btn btn-outline-secondary">
+                        <i class="fas fa-server me-1"></i>
+                        View Hardwares
+                    </a>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="small text-muted">
+                    <p class="mb-2"><strong>Need access?</strong></p>
+                    <p class="mb-0">
+                        Contact your system administrator to request the appropriate 
+                        Active Directory group membership for this application.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

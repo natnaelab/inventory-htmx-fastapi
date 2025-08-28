@@ -2,8 +2,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-from sqlmodel import Field, SQLModel, text
-from sqlalchemy import Column, String, DateTime, Boolean
+from sqlmodel import Field, SQLModel, text, Column, String, DateTime, Boolean
 
 
 class StatusEnum(str, Enum):

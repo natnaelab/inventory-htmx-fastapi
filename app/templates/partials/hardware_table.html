@@ -12,18 +12,81 @@
                 {{ item_count }} device{{ 's' if item_count != 1 else '' }}
             </span>
         </div>
+        <div class="d-flex gap-2">
+            <a href="/hardware/export/excel?search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}" 
+               class="btn btn-outline-success btn-sm"
+               title="Export to Excel">
+                <i class="fas fa-file-excel me-1"></i>
+                Export Excel
+            </a>
+            {% if request.state and request.state.user and request.state.user.role == 'administrator' %}
+            <a href="/hardware/add" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i>
+                Add Hardware
+            </a>
+            {% endif %}
+        </div>
     </div>
-
     {% if hardware_list %}
     <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
-                    <th scope="col">Device Info</th>
-                    <th scope="col">Network</th>
-                    <th scope="col">Assignment</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Model</th>
+                    <th scope="col" class="sortable" 
+                        hx-get="/hardware?sort_by=hostname&sort_order={{ 'desc' if sort_by == 'hostname' and sort_order == 'asc' else 'asc' }}&search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}&page=1"
+                        hx-target="#hardware-table-container"
+                        style="cursor: pointer;">
+                        Device Info
+                        {% if sort_by == 'hostname' %}
+                            <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }} ms-1"></i>
+                        {% else %}
+                            <i class="fas fa-sort ms-1 text-muted"></i>
+                        {% endif %}
+                    </th>
+                    <th scope="col" class="sortable"
+                        hx-get="/hardware?sort_by=ip&sort_order={{ 'desc' if sort_by == 'ip' and sort_order == 'asc' else 'asc' }}&search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}&page=1"
+                        hx-target="#hardware-table-container"
+                        style="cursor: pointer;">
+                        Network
+                        {% if sort_by == 'ip' %}
+                            <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }} ms-1"></i>
+                        {% else %}
+                            <i class="fas fa-sort ms-1 text-muted"></i>
+                        {% endif %}
+                    </th>
+                    <th scope="col" class="sortable"
+                        hx-get="/hardware?sort_by=center&sort_order={{ 'desc' if sort_by == 'center' and sort_order == 'asc' else 'asc' }}&search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}&page=1"
+                        hx-target="#hardware-table-container"
+                        style="cursor: pointer;">
+                        Assignment
+                        {% if sort_by == 'center' %}
+                            <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }} ms-1"></i>
+                        {% else %}
+                            <i class="fas fa-sort ms-1 text-muted"></i>
+                        {% endif %}
+                    </th>
+                    <th scope="col" class="sortable"
+                        hx-get="/hardware?sort_by=status&sort_order={{ 'desc' if sort_by == 'status' and sort_order == 'asc' else 'asc' }}&search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}&page=1"
+                        hx-target="#hardware-table-container"
+                        style="cursor: pointer;">
+                        Status
+                        {% if sort_by == 'status' %}
+                            <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }} ms-1"></i>
+                        {% else %}
+                            <i class="fas fa-sort ms-1 text-muted"></i>
+                        {% endif %}
+                    </th>
+                    <th scope="col" class="sortable"
+                        hx-get="/hardware?sort_by=model&sort_order={{ 'desc' if sort_by == 'model' and sort_order == 'asc' else 'asc' }}&search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}&page=1"
+                        hx-target="#hardware-table-container"
+                        style="cursor: pointer;">
+                        Model
+                        {% if sort_by == 'model' %}
+                            <i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }} ms-1"></i>
+                        {% else %}
+                            <i class="fas fa-sort ms-1 text-muted"></i>
+                        {% endif %}
+                    </th>
                     <th scope="col" style="width: 120px;">Actions</th>
                 </tr>
             </thead>
@@ -101,6 +164,8 @@
                         </div>
                     </td>
                     <td>
+                        <div class="d-flex align-items-center">
+                            <div id="status-{{ hw.id }}">
                         <span class="status-pill status-{{ (hw.status.value|lower).replace('_','-') if hw.status else 'unknown' }}" title="Status">
                             <span class="status-badge status-{{ (hw.status.value|lower).replace('_','-') if hw.status else 'unknown' }}"></span>
                             {% if hw.status %}
@@ -115,6 +180,15 @@
                                 Unknown
                             {% endif %}
                         </span>
+                            </div>
+                            {% if request.state and request.state.user and request.state.user.role == 'administrator' %}
+                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2" 
+                                    onclick="cycleStatus({{ hw.id }})" 
+                                    title="Cycle to next status">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            {% endif %}
+                        </div>
                     </td>
                     <td>
                         <div class="d-flex align-items-center">
@@ -128,9 +202,9 @@
                             } %}
                             {% set model_labels = {
                                 'Notebook': 'Notebook',
-                                'MFF': 'MFF (Mini Form Factor)',
+                                'MFF': 'MFF (Micro Form Factor)',
                                 'AllInOne': 'All-in-One PC',
-                                'Backpack': 'Backpack PC',
+                                'Backpack': 'Backpack',
                                 'DockingStation': 'Docking Station',
                                 'Monitor': 'Monitor'
                             } %}
@@ -140,22 +214,26 @@
                     </td>
                     <td>
                         <div class="d-flex gap-1">
+                            {% if current_user and current_user.role == 'administrator' %}
                             <a href="/hardware/{{ hw.id }}/edit" 
                                class="action-btn btn-edit" 
                                title="Edit Hardware">
                                 <i class="fas fa-edit"></i>
                             </a>
+                            {% endif %}
                             <a href="/hardware/{{ hw.id }}" 
                                class="action-btn" 
                                title="View Details">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            {% if current_user and current_user.role == 'administrator' %}
                             <button type="button" 
                                     class="action-btn btn-delete" 
                                     title="Delete Hardware"
                                     onclick="deleteHardware({{ hw.id }}, '{{ hw.hostname or 'Unknown' }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -178,7 +256,7 @@
                 <li class="page-item">
                     <a class="page-link" 
                        href="#" 
-                       hx-get="/hardware?page={{ current_page - 1 }}&search={{ search_query or '' }}&status={{ status_filter or '' }}&model={{ model_filter or '' }}&center={{ center_filter or '' }}"
+                       hx-get="/hardware?page={{ current_page - 1 }}&search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}&sort_by={{ sort_by or 'updated_at' }}&sort_order={{ sort_order or 'desc' }}"
                         hx-target="#hardware-table-container">
                         <i class="fas fa-chevron-left"></i>
                     </a>
@@ -189,7 +267,7 @@
                 <li class="page-item {{ 'active' if page_num == current_page else '' }}">
                     <a class="page-link" 
                        href="#" 
-                       hx-get="/hardware?page={{ page_num }}&search={{ search_query or '' }}&status={{ status_filter or '' }}&model={{ model_filter or '' }}&center={{ center_filter or '' }}"
+                       hx-get="/hardware?page={{ page_num }}&search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}&sort_by={{ sort_by or 'updated_at' }}&sort_order={{ sort_order or 'desc' }}"
                         hx-target="#hardware-table-container">
                         {{ page_num }}
                     </a>
@@ -200,7 +278,7 @@
                 <li class="page-item">
                     <a class="page-link" 
                        href="#" 
-                       hx-get="/hardware?page={{ current_page + 1 }}&search={{ search_query or '' }}&status={{ status_filter or '' }}&model={{ model_filter or '' }}&center={{ center_filter or '' }}"
+                       hx-get="/hardware?page={{ current_page + 1 }}&search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}&sort_by={{ sort_by or 'updated_at' }}&sort_order={{ sort_order or 'desc' }}"
                         hx-target="#hardware-table-container">
                         <i class="fas fa-chevron-right"></i>
                     </a>
@@ -232,10 +310,12 @@
                 Clear Filters
             </button>
             {% endif %}
+            {% if request.state and request.state.user and request.state.user.role == 'administrator' %}
             <a href="/hardware/add" class="btn btn-primary">
                 <i class="fas fa-plus me-1"></i>
                 Add Hardware
             </a>
+            {% endif %}
         </div>
     </div>
     {% endif %}
