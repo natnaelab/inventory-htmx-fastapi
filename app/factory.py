@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from starlette.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.routes.hardware import router as hardware_router
 from app.routes.api import router as api_router
@@ -13,7 +14,6 @@ from app.routes.audit_log import router as audit_log_router
 from app.middleware.audit_logging import AuditLoggingMiddleware
 from app.middleware.auth import AuthenticationMiddleware
 from app.core.templates import templates
-
 from app.audit.listeners import initialize_audit_listeners
 
 
@@ -49,6 +49,7 @@ def create_app() -> FastAPI:
             headers=exc.headers,
         )
 
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
     app.add_middleware(AuthenticationMiddleware)
     app.add_middleware(AuditLoggingMiddleware)
 
