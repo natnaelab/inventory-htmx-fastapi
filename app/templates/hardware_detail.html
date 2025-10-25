@@ -19,7 +19,7 @@
         {{ hardware.hostname }}
       </h1>
       <!-- Current Status Badge -->
-      <span class="status-pill status-{{ (hardware.status.value|lower).replace('_','-') if hardware.status else 'unknown' }}" title="Current Status">
+      <span class="status-pill status-{{ (hardware.status.value|lower).replace('_','-') if hardware.status else 'unknown' }}" data-bs-toggle="tooltip" data-bs-title="Current Status">
         <span class="status-badge status-{{ (hardware.status.value|lower).replace('_','-') if hardware.status else 'unknown' }}"></span>
         {% if hardware.status %}
           {% if hardware.status.value == 'IN_STOCK' %}In Stock
@@ -45,23 +45,23 @@
         <small class="text-muted d-block mb-1">Quick Status Change:</small>
         <div class="btn-group btn-group-sm" role="group">
           <button type="button" class="btn btn-outline-success" 
-                  onclick="quickStatusChange('IN_STOCK')" title="Set to In Stock">
+                  onclick="quickStatusChange('IN_STOCK')" data-bs-toggle="tooltip" data-bs-title="Set to In Stock">
             <i class="fas fa-box me-1"></i>In Stock
           </button>
           <button type="button" class="btn btn-outline-warning" 
-                  onclick="quickStatusChange('RESERVED')" title="Set to Reserved">
+                  onclick="quickStatusChange('RESERVED')" data-bs-toggle="tooltip" data-bs-title="Set to Reserved">
             <i class="fas fa-bookmark me-1"></i>Reserved
           </button>
           <button type="button" class="btn btn-outline-info" 
-                  onclick="quickStatusChange('IMAGING')" title="Set to Imaging">
+                  onclick="quickStatusChange('IMAGING')" data-bs-toggle="tooltip" data-bs-title="Set to Imaging">
             <i class="fas fa-compact-disc me-1"></i>Imaging
           </button>
           <button type="button" class="btn btn-outline-primary" 
-                  onclick="quickStatusChange('SHIPPED')" title="Set to Shipped">
+                  onclick="quickStatusChange('SHIPPED')" data-bs-toggle="tooltip" data-bs-title="Set to Shipped">
             <i class="fas fa-shipping-fast me-1"></i>Shipped
           </button>
           <button type="button" class="btn btn-outline-dark" 
-                  onclick="quickStatusChange('COMPLETED')" title="Set to Completed">
+                  onclick="quickStatusChange('COMPLETED')" data-bs-toggle="tooltip" data-bs-title="Set to Completed">
             <i class="fas fa-check-circle me-1"></i>Completed
           </button>
         </div>
@@ -73,11 +73,11 @@
         <small class="text-muted d-block mb-1">Export:</small>
         <div class="btn-group btn-group-sm" role="group">
           <a href="/hardware/{{ hardware.id }}/qr" class="btn btn-outline-secondary" 
-             title="Generate QR Code">
+             data-bs-toggle="tooltip" data-bs-title="Generate QR Code">
             <i class="fas fa-qrcode me-1"></i>QR Code
           </a>
           <a href="/hardware/{{ hardware.id }}/label" class="btn btn-outline-secondary" 
-             title="Generate Label CSV">
+             data-bs-toggle="tooltip" data-bs-title="Generate Label CSV">
             <i class="fas fa-tags me-1"></i>Label
           </a>
         </div>
