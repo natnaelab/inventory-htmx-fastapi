@@ -1,7 +1,8 @@
 import logging
 import math
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any, List
+from urllib.parse import urlparse, parse_qs
 
 from fastapi import APIRouter, Request, Depends, HTTPException, Query, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -19,6 +20,113 @@ from app.services.audit import AuditService
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _get_filter_params(request: Request) -> Dict[str, Any]:
+    current_url = request.headers.get("HX-Current-URL")
+
+    if current_url:
+        parsed = urlparse(current_url)
+        raw_params = parse_qs(parsed.query)
+
+        def get_list(name: str) -> List[str]:
+            return [v for v in raw_params.get(name, []) if v]
+
+        def get_one(name: str, default: Optional[str] = None) -> Optional[str]:
+            values = raw_params.get(name)
+            if not values:
+                return default
+            value = values[-1]
+            return value or default
+    else:
+        raw_params = request.query_params
+
+        def get_list(name: str) -> List[str]:
+            return [v for v in raw_params.getlist(name) if v]
+
+        def get_one(name: str, default: Optional[str] = None) -> Optional[str]:
+            value = raw_params.get(name, default)
+            return value or default
+
+    def to_int(value: Optional[str], default: int) -> int:
+        try:
+            return int(value) if value is not None else default
+        except (TypeError, ValueError):
+            return default
+
+    return {
+        "search": get_one("search"),
+        "status": get_list("status") or None,
+        "model": get_one("model"),
+        "center": get_one("center"),
+        "page": to_int(get_one("page"), 1),
+        "per_page": to_int(get_one("per_page"), 20),
+        "sort_by": get_one("sort_by", "updated_at") or "updated_at",
+        "sort_order": get_one("sort_order", "desc") or "desc",
+    }
+
+
+def _render_hardware_table(
+    request: Request,
+    hardware_service: HardwareService,
+    current_user: Dict[str, Any],
+    filters: Dict[str, Any],
+):
+    result = hardware_service.get_hardware_list(
+        search=filters["search"],
+        status=filters["status"],
+        model=filters["model"],
+        center=filters["center"],
+        page=filters["page"],
+        per_page=filters["per_page"],
+        sort_by=filters["sort_by"],
+        sort_order=filters["sort_order"],
+    )
+
+    total_pages = result["total_pages"] or 0
+    if total_pages and filters["page"] > total_pages:
+        filters["page"] = total_pages
+        result = hardware_service.get_hardware_list(
+            search=filters["search"],
+            status=filters["status"],
+            model=filters["model"],
+            center=filters["center"],
+            page=filters["page"],
+            per_page=filters["per_page"],
+            sort_by=filters["sort_by"],
+            sort_order=filters["sort_order"],
+        )
+    elif total_pages == 0 and filters["page"] != 1:
+        filters["page"] = 1
+        result = hardware_service.get_hardware_list(
+            search=filters["search"],
+            status=filters["status"],
+            model=filters["model"],
+            center=filters["center"],
+            page=filters["page"],
+            per_page=filters["per_page"],
+            sort_by=filters["sort_by"],
+            sort_order=filters["sort_order"],
+        )
+
+    template_data = {
+        "request": request,
+        "hardware_list": result["hardware_list"],
+        "total_count": result["total_count"],
+        "current_page": result["current_page"],
+        "per_page": result["per_page"],
+        "total_pages": result["total_pages"],
+        "status_counts": result["status_counts"],
+        "search_query": filters["search"],
+        "status_filter": result["status_filter"],
+        "model_filter": filters["model"],
+        "center_filter": filters["center"],
+        "sort_by": filters["sort_by"],
+        "sort_order": filters["sort_order"],
+        "current_user": current_user,
+    }
+
+    return templates.TemplateResponse("partials/hardware_table.html", template_data)
 
 
 @router.get("", response_class=HTMLResponse)
@@ -252,20 +360,11 @@ async def delete_hardware(
         hardware_service = HardwareService(db)
         hardware_service.delete_hardware(hardware_id)
 
-        result = hardware_service.get_hardware_list(page=1, per_page=20, sort_by="updated_at", sort_order="desc")
+        if request.headers.get("HX-Request") == "true":
+            filters = _get_filter_params(request)
+            return _render_hardware_table(request, hardware_service, current_user, filters)
 
-        return templates.TemplateResponse(
-            "partials/hardware_table.html",
-            {
-                "request": request,
-                "hardware_list": result["hardware_list"],
-                "total_count": result["total_count"],
-                "current_page": result["current_page"],
-                "per_page": result["per_page"],
-                "total_pages": result["total_pages"],
-                "current_user": current_user,
-            },
-        )
+        return RedirectResponse(url="/hardware", status_code=303)
 
     except ValueError as e:
         logger.error(f"Error deleting hardware: {e}")
@@ -370,6 +469,7 @@ async def generate_label_csv(
 
 @router.post("/{hardware_id}/status")
 async def quick_status_change(
+    request: Request,
     hardware_id: int,
     db: Session = Depends(get_session),
     current_user=Depends(require_admin),
@@ -379,6 +479,10 @@ async def quick_status_change(
     try:
         hardware_service = HardwareService(db)
         hardware = hardware_service.change_hardware_status(hardware_id, status, current_user)
+
+        if request.headers.get("HX-Request") == "true":
+            filters = _get_filter_params(request)
+            return _render_hardware_table(request, hardware_service, current_user, filters)
 
         return {"success": True, "message": f"Status changed to {status.value}"}
 
