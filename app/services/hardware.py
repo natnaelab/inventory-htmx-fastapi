@@ -40,6 +40,10 @@ class HardwareService:
                 | (Hardware.uuid.ilike(search_term))
                 | (Hardware.enduser.ilike(search_term))
                 | (Hardware.ticket.ilike(search_term))
+                | (Hardware.po_ticket.ilike(search_term))
+                | (Hardware.center.ilike(search_term))
+                | (Hardware.comment.ilike(search_term))
+                | (Hardware.admin.ilike(search_term))
             )
 
         status_filter_list = []
