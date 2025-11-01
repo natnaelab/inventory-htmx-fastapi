@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Preview Import - Inventory Management System{% endblock %}
+
+{% block header %}
+<div class="row align-items-center mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/hardware">Hardware</a></li>
+                <li class="breadcrumb-item"><a href="/hardware/import">Bulk Import</a></li>
+                <li class="breadcrumb-item active">Preview</li>
+            </ol>
+        </nav>
+        <h1 class="mb-0">
+            <i class="fas fa-eye text-primary me-3"></i>
+            Preview Import
+        </h1>
+        <p class="text-muted mb-0">Review the detected changes before applying them to the database.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt me-2"></i>
+                    File Summary
+                </h5>
+                <span class="badge bg-secondary">{{ file_name }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="h3 text-primary">{{ preview.total_rows }}</div>
+                        <div class="text-muted">Total Rows</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h3 text-success">{{ preview.create_count }}</div>
+                        <div class="text-muted">Will Create</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h3 text-info">{{ preview.update_count }}</div>
+                        <div class="text-muted">Will Update</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="h3 text-danger">{{ preview.errors|length }}</div>
+                        <div class="text-muted">Errors</div>
+                    </div>
+                </div>
+                {% if preview.errors %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ preview.errors|length }} issue{{ 's' if preview.errors|length != 1 else '' }} detected. Rows with errors will be skipped.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if preview.errors %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                    Errors
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for error in preview.errors %}
+                    <li class="list-group-item">
+                        <i class="fas fa-times text-danger me-2"></i>{{ error }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Pending Changes
+                </h6>
+                <span class="text-muted small">Showing {{ preview.valid_items|length }} row{{ 's' if preview.valid_items|length != 1 else '' }}</span>
+            </div>
+            <div class="card-body p-0">
+                {% if preview.valid_items %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">Row</th>
+                                <th style="width: 120px;">Action</th>
+                                <th>Serial Number</th>
+                                <th>Hostname</th>
+                                <th>Model</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in preview.valid_items %}
+                            <tr>
+                                <td class="text-muted">{{ item.row }}</td>
+                                <td>
+                                    {% if item.action == 'create' %}
+                                    <span class="badge bg-success">Create</span>
+                                    {% else %}
+                                    <span class="badge bg-info text-dark">Update</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-mono">{{ item.serial_number }}</td>
+                                <td>{{ item.hostname }}</td>
+                                <td>{{ item.model }}</td>
+                                <td>{{ item.status }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="p-4 text-muted text-center">
+                    <i class="fas fa-info-circle me-2"></i>No valid rows detected.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-light border rounded p-3 d-flex justify-content-between align-items-center shadow-sm" style="position: sticky; bottom: 1rem; z-index: 1030;">
+            <div>
+                <strong>{{ preview.create_count + preview.update_count }}</strong> change{{ '' if (preview.create_count + preview.update_count) == 1 else 's' }} ready to apply
+                {% if preview.errors %}
+                <span class="text-muted">| {{ preview.errors|length }} row{{ '' if preview.errors|length == 1 else 's' }} skipped</span>
+                {% endif %}
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/hardware/import" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back
+                </a>
+                <form method="post" action="/hardware/import/confirm" class="m-0">
+                    <textarea name="payload" hidden>{{ preview | tojson | safe }}</textarea>
+                    <button type="submit" class="btn btn-primary" {% if preview.valid_items|length == 0 %}disabled{% endif %}>
+                        <i class="fas fa-check me-1"></i>
+                        Confirm Import
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

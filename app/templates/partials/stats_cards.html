@@ -1,152 +1,122 @@
-<!-- Statistics Cards -->
-<div id="stats-container" class="row g-4 mb-4">
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
-    <div class="card stat-card border-primary h-100">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center">
-                <div class="stat-icon-wrapper bg-primary bg-opacity-10 rounded-3 p-3 me-3">
-                    <i class="fas fa-laptop fa-lg text-primary"></i>
-                </div>
-                <div class="ms-auto text-end">
-                    <h3 class="fw-bold mb-0 text-primary">{{ total_count or 0 }}</h3>
-                    <small class="text-muted fw-medium">Total Devices</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+w{% set active_status = request.query_params.get('status') %}
+{% set status_counts = status_counts or {} %}
+{% set base_params = request.query_params|remove('status')|remove('page') %}
+{% set base_query = '?' ~ base_params if base_params else '' %}
+{% set extra_query = '&' ~ base_params if base_params else '' %}
+{% if active_status %}
+    {% set active_label = active_status|replace('_', ' ')|title %}
+{% else %}
+    {% set active_label = 'All Devices' %}
+{% endif %}
+{% set shortcuts = [
+    {
+        'status': none,
+        'label': 'Total Devices',
+        'icon': 'fas fa-laptop',
+        'count': total_count or 0,
+        'accent': 'primary'
+    },
+    {
+        'status': 'IN_STOCK',
+        'label': 'In Stock',
+        'icon': 'fas fa-warehouse',
+        'count': status_counts.get('IN_STOCK', 0),
+        'accent': 'success'
+    },
+    {
+        'status': 'RESERVED',
+        'label': 'Reserved',
+        'icon': 'fas fa-clock',
+        'count': status_counts.get('RESERVED', 0),
+        'accent': 'warning'
+    },
+    {
+        'status': 'IMAGING',
+        'label': 'Imaging',
+        'icon': 'fas fa-cog',
+        'count': status_counts.get('IMAGING', 0),
+        'accent': 'info'
+    },
+    {
+        'status': 'SHIPPED',
+        'label': 'Shipped',
+        'icon': 'fas fa-shipping-fast',
+        'count': status_counts.get('SHIPPED', 0),
+        'accent': 'purple'
+    },
+    {
+        'status': 'COMPLETED',
+        'label': 'Completed',
+        'icon': 'fas fa-check-circle',
+        'count': status_counts.get('COMPLETED', 0),
+        'accent': 'secondary'
+    }
+] %}
 
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
-    <div class="card stat-card border-success h-100">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center">
-                <div class="stat-icon-wrapper bg-success bg-opacity-10 rounded-3 p-3 me-3">
-                    <i class="fas fa-warehouse fa-lg text-success"></i>
-                </div>
-                <div class="ms-auto text-end">
-                    <h3 class="fw-bold mb-0 text-success">{{ status_counts.IN_STOCK or 0 }}</h3>
-                    <small class="text-muted fw-medium">In Stock</small>
-                </div>
-            </div>
-        </div>
+<div class="card stat-shortcuts-card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="text-uppercase small fw-semibold text-muted">Hardware Statuses</span>
+        <span class="badge bg-light text-secondary border">
+            <i class="fas fa-filter me-1"></i>
+            {{ active_label }}
+        </span>
     </div>
-</div>
-
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
-    <div class="card stat-card border-warning h-100">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center">
-                <div class="stat-icon-wrapper bg-warning bg-opacity-10 rounded-3 p-3 me-3">
-                    <i class="fas fa-clock fa-lg text-warning"></i>
-                </div>
-                <div class="ms-auto text-end">
-                    <h3 class="fw-bold mb-0 text-warning">{{ status_counts.RESERVED or 0 }}</h3>
-                    <small class="text-muted fw-medium">Reserved</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
-    <div class="card stat-card border-info h-100">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center">
-                <div class="stat-icon-wrapper bg-info bg-opacity-10 rounded-3 p-3 me-3">
-                    <i class="fas fa-cog fa-lg text-info"></i>
-                </div>
-                <div class="ms-auto text-end">
-                    <h3 class="fw-bold mb-0 text-info">{{ status_counts.IMAGING or 0 }}</h3>
-                    <small class="text-muted fw-medium">Imaging</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
-    <div class="card stat-card border-purple h-100">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center">
-                <div class="stat-icon-wrapper bg-purple bg-opacity-10 rounded-3 p-3 me-3">
-                    <i class="fas fa-shipping-fast fa-lg text-purple"></i>
-                </div>
-                <div class="ms-auto text-end">
-                    <h3 class="fw-bold mb-0 text-purple">{{ status_counts.SHIPPED or 0 }}</h3>
-                    <small class="text-muted fw-medium">Shipped</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
-    <div class="card stat-card border-secondary h-100">
-        <div class="card-body p-4">
-            <div class="d-flex align-items-center">
-                <div class="stat-icon-wrapper bg-secondary bg-opacity-10 rounded-3 p-3 me-3">
-                    <i class="fas fa-check-circle fa-lg text-secondary"></i>
-                </div>
-                <div class="ms-auto text-end">
-                    <h3 class="fw-bold mb-0 text-secondary">{{ status_counts.COMPLETED or 0 }}</h3>
-                    <small class="text-muted fw-medium">Completed</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Stock Counter by Device Type -->
-{% if stock_summary %}
-<div class="col-12 mb-4">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">
-                <i class="fas fa-boxes me-2"></i>
-                Current Stock by Device Type
-            </h6>
-            {% if stock_summary.alerts %}
-            <span class="badge bg-danger">
-                <i class="fas fa-exclamation-triangle me-1"></i>
-                {{ stock_summary.alert_count }} Alert{{ 's' if stock_summary.alert_count > 1 else '' }}
-            </span>
-            {% endif %}
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                {% for model, count in stock_summary.stock_counts.items() %}
-                {% set model_name = stock_summary.model_names.get(model, model) %}
-                {% set threshold = stock_summary.thresholds.get(model, 0) %}
-                {% set is_low = count < threshold %}
-                <div class="col-lg-2 col-md-4 col-sm-6">
-                    <div class="card text-center h-100 {{ 'border-danger bg-danger bg-opacity-10' if is_low else 'border-light' }}">
-                        <div class="card-body p-3 d-flex flex-column">
-                            <div class="position-relative mb-2">
-                                {% if is_low %}
-                                <i class="fas fa-exclamation-triangle text-danger position-absolute top-0 end-0" style="font-size: 12px;"></i>
-                                {% endif %}
-                                <h3 class="mb-1 fw-bold {{ 'text-danger' if is_low else 'text-primary' }}">{{ count }}</h3>
-                            </div>
-                            <div class="flex-grow-1 d-flex flex-column justify-content-center">
-                                <div class="text-muted fw-medium mb-1" style="font-size: 0.85rem;">{{ model_name }}</div>
-                                {% if is_low %}
-                                <small class="text-muted">Threshold: {{ threshold }}</small>
-                                {% endif %}
-                            </div>
-                            {% if is_low %}
-                            <div class="mt-2">
-                                <span class="badge bg-danger">
-                                    Need {{ threshold - count }}
-                                </span>
-                            </div>
-                            {% endif %}
-                        </div>
+    <div class="card-body">
+        <div class="stat-shortcuts-list">
+            {% for shortcut in shortcuts %}
+                {% set is_all = shortcut.status is none %}
+                {% set is_active = (is_all and not active_status) or (shortcut.status == active_status) %}
+                {% if shortcut.status %}
+                    {% set target_url = '/hardware?status=' ~ shortcut.status ~ (extra_query if extra_query else '') %}
+                {% else %}
+                    {% set target_url = '/hardware' ~ (base_query if base_query else '') %}
+                {% endif %}
+                <button type="button"
+                        hx-get="{{ target_url }}"
+                        hx-target="#hardware-table-container"
+                        hx-push-url="true"
+                        class="stat-shortcut {{ 'is-active' if is_active else '' }}"
+                        data-dashboard-status="{{ shortcut.status or 'ALL' }}"
+                        data-accent="{{ shortcut.accent }}"
+                        aria-pressed="{{ 'true' if is_active else 'false' }}">
+                    <div class="stat-shortcut-icon">
+                        <i class="{{ shortcut.icon }}"></i>
                     </div>
-                </div>
-                {% endfor %}
-            </div>
+                    <div class="stat-shortcut-details">
+                        <span class="stat-shortcut-count">{{ shortcut.count }}</span>
+                        <span class="stat-shortcut-label">{{ shortcut.label }}</span>
+                    </div>
+                    <i class="fas fa-chevron-right stat-shortcut-chevron" aria-hidden="true"></i>
+                </button>
+            {% endfor %}
         </div>
+    </div>
+</div>
+
+<!-- Stock Summary -->
+{% if stock_summary %}
+<div class="card stock-summary-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold small text-uppercase">Models</h6>
+        {% if stock_summary.alerts %}
+        <span class="badge bg-danger-soft text-danger rounded-pill">
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            {{ stock_summary.alert_count }} Alert{{ 's' if stock_summary.alert_count > 1 else '' }}
+        </span>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush stock-summary-list">
+            {% for model, count in stock_summary.stock_counts.items() %}
+            {% set model_name = stock_summary.model_names.get(model, model) %}
+            {% set threshold = stock_summary.thresholds.get(model, 0) %}
+            {% set is_low = count < threshold %}
+            <li class="list-group-item d-flex justify-content-between align-items-center {{ 'low-stock' if is_low else '' }}">
+                <span>{{ model_name }}</span>
+                <span class="fw-bold {{ 'text-danger' if is_low else '' }}">{{ count }}</span>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
 {% endif %}
-</div>

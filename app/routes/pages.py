@@ -21,6 +21,8 @@ async def dashboard(request: Request, db: Session = Depends(get_session), curren
         count = db.query(Hardware).filter(Hardware.status == status).count()
         status_counts[status.value] = count
 
+    total_count = db.query(Hardware).count()
+
     recent_hardware = db.query(Hardware).order_by(Hardware.updated_at.desc()).limit(10).all()
 
     current_page = 1
@@ -40,7 +42,7 @@ async def dashboard(request: Request, db: Session = Depends(get_session), curren
         {
             "request": request,
             "hardware_list": hardware_list,
-            "total_count": filtered_count,
+            "total_count": total_count,
             "current_page": current_page,
             "per_page": per_page,
             "total_pages": total_pages,

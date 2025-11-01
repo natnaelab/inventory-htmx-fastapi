@@ -3,7 +3,6 @@ import io
 import logging
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any, Tuple
-
 import pandas as pd
 import qrcode
 from openpyxl.utils import get_column_letter
@@ -22,6 +21,15 @@ class HardwareService:
     
     def get_hardware_by_id(self, hardware_id: int) -> Optional[Hardware]:
         return self.db.query(Hardware).filter(Hardware.id == hardware_id).first()
+    
+    def get_hardware_by_serial(self, serial_number: str) -> Optional[Hardware]:
+        if not serial_number:
+            return None
+        return (
+            self.db.query(Hardware)
+            .filter(Hardware.serial_number == serial_number)
+            .first()
+        )
     
     def get_filtered_hardware_query(self, 
                                    search: Optional[str] = None,
@@ -261,8 +269,31 @@ class HardwareService:
         return output
     
     def import_hardware_from_file(self, file_content: bytes, filename: str, current_user: Dict[str, Any]) -> Dict[str, Any]:
+        parsed = self.parse_import_file(file_content, filename)
+
+        if not parsed["valid_items"]:
+            return {
+                "total_rows": parsed["total_rows"],
+                "created": 0,
+                "updated": 0,
+                "errors": parsed["errors"],
+            }
+
+        apply_summary = self.apply_import_data(
+            [item["data"] for item in parsed["valid_items"]],
+            current_user,
+        )
+
+        return {
+            "total_rows": parsed["total_rows"],
+            "created": apply_summary["created"],
+            "updated": apply_summary["updated"],
+            "errors": parsed["errors"] + apply_summary["errors"],
+        }
+
+    def parse_import_file(self, file_content: bytes, filename: str) -> Dict[str, Any]:
         filename = filename.lower()
-        
+
         if filename.endswith('.csv'):
             csv_string = file_content.decode('utf-8')
             csv_reader = csv.DictReader(io.StringIO(csv_string))
@@ -272,56 +303,115 @@ class HardwareService:
             rows = df.to_dict('records')
         else:
             raise ValueError("File must be a CSV or Excel file (.csv, .xlsx, .xls)")
-        
-        results = {
-            'created': 0,
-            'updated': 0,
-            'errors': [],
-            'total_rows': 0
-        }
-        
+
+        total_rows = len(rows)
+        errors: List[str] = []
+        valid_items: List[Dict[str, Any]] = []
+        seen_serials: set[str] = set()
+
         for row_num, row in enumerate(rows, start=2):
-            results['total_rows'] += 1
-            
             try:
                 def safe_get(key, default=''):
                     value = row.get(key, default)
                     if pd.isna(value):
                         return default
                     return str(value).strip()
-                
+
                 hardware_data = self._extract_hardware_from_row(row, safe_get)
-                
-                if not all([hardware_data.get('hostname'), hardware_data.get('serial_number'), 
-                           hardware_data.get('model'), hardware_data.get('status')]):
-                    results['errors'].append(f"Row {row_num}: Missing required fields")
+
+                if not all([
+                    hardware_data.get('hostname'),
+                    hardware_data.get('serial_number'),
+                    hardware_data.get('model'),
+                    hardware_data.get('status'),
+                ]):
+                    errors.append(f"Row {row_num}: Missing required fields")
                     continue
-                
+
+                serial = hardware_data['serial_number']
+                if serial in seen_serials:
+                    errors.append(f"Row {row_num}: Duplicate serial number '{serial}' in file")
+                    continue
+                seen_serials.add(serial)
+
                 try:
-                    hardware_data['model'] = ModelEnum(hardware_data['model'])
-                    hardware_data['status'] = StatusEnum(hardware_data['status'])
-                except ValueError as e:
-                    results['errors'].append(f"Row {row_num}: Invalid enum value - {e}")
+                    model_enum = ModelEnum(hardware_data['model'])
+                except ValueError:
+                    errors.append(f"Row {row_num}: Invalid model '{hardware_data['model']}'")
                     continue
-                
-                hardware_id = safe_get('ID')
-                if hardware_id and hardware_id.isdigit():
-                    existing_hardware = self.get_hardware_by_id(int(hardware_id))
-                    if existing_hardware:
-                        self.update_hardware(int(hardware_id), hardware_data, current_user)
-                        results['updated'] += 1
-                    else:
-                        self.create_hardware(hardware_data, current_user)
-                        results['created'] += 1
+
+                try:
+                    status_enum = StatusEnum(hardware_data['status'])
+                except ValueError:
+                    errors.append(f"Row {row_num}: Invalid status '{hardware_data['status']}'")
+                    continue
+
+                hardware_data['model'] = model_enum.value
+                hardware_data['status'] = status_enum.value
+
+                existing = self.get_hardware_by_serial(serial)
+                action = 'update' if existing else 'create'
+
+                valid_items.append({
+                    'row': row_num,
+                    'serial_number': serial,
+                    'hostname': hardware_data.get('hostname'),
+                    'model': hardware_data.get('model'),
+                    'status': hardware_data.get('status'),
+                    'action': action,
+                    'data': hardware_data,
+                })
+
+            except Exception as exc:
+                errors.append(f"Row {row_num}: {exc}")
+
+        create_count = sum(1 for item in valid_items if item['action'] == 'create')
+        update_count = sum(1 for item in valid_items if item['action'] == 'update')
+
+        return {
+            'total_rows': total_rows,
+            'valid_items': valid_items,
+            'errors': errors,
+            'create_count': create_count,
+            'update_count': update_count,
+        }
+
+    def apply_import_data(self, items: List[Dict[str, Any]], current_user: Dict[str, Any]) -> Dict[str, Any]:
+        created = 0
+        updated = 0
+        errors: List[str] = []
+
+        for item in items:
+            try:
+                hardware_data = item.copy()
+                hardware_data['model'] = ModelEnum(hardware_data['model'])
+                hardware_data['status'] = StatusEnum(hardware_data['status'])
+
+                action, _ = self.upsert_hardware_by_serial(hardware_data, current_user)
+                if action == 'created':
+                    created += 1
                 else:
-                    self.create_hardware(hardware_data, current_user)
-                    results['created'] += 1
-                    
-            except Exception as e:
-                results['errors'].append(f"Row {row_num}: {str(e)}")
-                continue
-        
-        return results
+                    updated += 1
+            except Exception as exc:
+                serial = item.get('serial_number', 'UNKNOWN')
+                errors.append(f"Serial {serial}: {exc}")
+
+        return {'created': created, 'updated': updated, 'errors': errors}
+
+    def upsert_hardware_by_serial(
+        self, hardware_data: Dict[str, Any], current_user: Dict[str, Any]
+    ) -> Tuple[str, Hardware]:
+        serial_number = hardware_data.get('serial_number')
+        if not serial_number:
+            raise ValueError('serial_number is required')
+
+        existing = self.get_hardware_by_serial(serial_number)
+        if existing:
+            updated = self.update_hardware(existing.id, hardware_data, current_user)
+            return 'updated', updated
+
+        created = self.create_hardware(hardware_data, current_user)
+        return 'created', created
     
     def _extract_hardware_from_row(self, row: Dict[str, Any], safe_get) -> Dict[str, Any]:
         missing_value = safe_get('Missing').lower()

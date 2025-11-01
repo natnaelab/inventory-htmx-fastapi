@@ -15,8 +15,7 @@
         <div class="d-flex gap-2">
             <a href="/hardware/export/excel?search={{ search_query or '' }}{% for s in status_filter %}&status={{ s }}{% endfor %}&model={{ model_filter or '' }}&center={{ center_filter or '' }}" 
                class="btn btn-outline-success btn-sm"
-               data-bs-toggle="tooltip"
-               data-bs-title="Export to Excel">
+               aria-label="Export to Excel">
                 <i class="fas fa-file-excel me-1"></i>
                 Export Excel
             </a>
@@ -167,7 +166,7 @@
                     <td>
                         <div class="d-flex align-items-center">
                             <div id="status-{{ hw.id }}">
-                        <span class="status-pill status-{{ (hw.status.value|lower).replace('_','-') if hw.status else 'unknown' }}" data-bs-toggle="tooltip" data-bs-title="Status">
+                        <span class="status-pill status-{{ (hw.status.value|lower).replace('_','-') if hw.status else 'unknown' }}">
                             <span class="status-badge status-{{ (hw.status.value|lower).replace('_','-') if hw.status else 'unknown' }}"></span>
                             {% if hw.status %}
                                 {% if hw.status.value == 'IN_STOCK' %}In Stock
@@ -184,9 +183,7 @@
                             </div>
                             {% if request.state and request.state.user and request.state.user.role == 'administrator' %}
                             <button type="button" class="btn btn-outline-secondary btn-sm ms-2" 
-                                    onclick="cycleStatus({{ hw.id }})" 
-                                    data-bs-toggle="tooltip"
-                                    data-bs-title="Cycle to next status"
+                                    onclick="cycleStatus({{ hw.id }})"
                                     aria-label="Cycle to next status">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
@@ -220,24 +217,18 @@
                             {% if current_user and current_user.role == 'administrator' %}
                             <a href="/hardware/{{ hw.id }}/edit" 
                                class="action-btn btn-edit" 
-                               data-bs-toggle="tooltip"
-                               data-bs-title="Edit Hardware"
                                aria-label="Edit Hardware">
                                 <i class="fas fa-edit"></i>
                             </a>
                             {% endif %}
                             <a href="/hardware/{{ hw.id }}" 
                                class="action-btn" 
-                               data-bs-toggle="tooltip"
-                               data-bs-title="View Details"
                                aria-label="View Details">
                                 <i class="fas fa-eye"></i>
                             </a>
                             {% if current_user and current_user.role == 'administrator' %}
                             <button type="button" 
                                     class="action-btn btn-delete" 
-                                    data-bs-toggle="tooltip"
-                                    data-bs-title="Delete Hardware"
                                     aria-label="Delete Hardware"
                                     onclick="deleteHardware({{ hw.id }}, '{{ hw.hostname or 'Unknown' }}')">
                                 <i class="fas fa-trash"></i>

@@ -33,7 +33,7 @@ class Hardware(SQLModel, table=True):
     po_ticket: Optional[str] = Field(default=None, max_length=255)
     uuid: Optional[str] = Field(default=None, max_length=255)
     center: Optional[str] = Field(default=None, sa_column=Column("center", String(255)))
-    serial_number: str = Field(sa_column=Column("serial_number", String(255)))
+    serial_number: str = Field(sa_column=Column("serial_number", String(255), unique=True, index=True))
     model: ModelEnum
     status: StatusEnum
     enduser: Optional[str] = Field(default=None, max_length=255)

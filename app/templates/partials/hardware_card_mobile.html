@@ -140,8 +140,6 @@
                         {% if current_user and current_user.role == 'administrator' %}
                         <a href="/hardware/{{ hw.id }}/edit" 
                            class="btn btn-outline-primary btn-sm"
-                           data-bs-toggle="tooltip"
-                           data-bs-title="Edit Hardware"
                            aria-label="Edit Hardware">
                             <i class="fas fa-edit"></i>
                         </a>
@@ -149,8 +147,6 @@
                         
                         <a href="/hardware/{{ hw.id }}" 
                            class="btn btn-outline-info btn-sm"
-                           data-bs-toggle="tooltip"
-                           data-bs-title="View Details"
                            aria-label="View Details">
                             <i class="fas fa-eye"></i>
                         </a>                        
@@ -161,15 +157,11 @@
                                class="form-check-input row-checkbox" 
                                value="{{ hw.id }}" 
                                name="selected_hardware"
-                               data-bs-toggle="tooltip"
-                               data-bs-title="Select for bulk actions"
                                aria-label="Select for bulk actions">
                         
                         <button type="button" 
                                 class="btn btn-outline-danger btn-sm"
                                 onclick="deleteHardware({{ hw.id }}, '{{ hw.hostname or 'Unknown' }}')"
-                                data-bs-toggle="tooltip"
-                                data-bs-title="Delete Hardware"
                                 aria-label="Delete Hardware">
                             <i class="fas fa-trash"></i>
                         </button>
