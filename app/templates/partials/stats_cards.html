@@ -1,4 +1,4 @@
-w{% set active_status = request.query_params.get('status') %}
+{% set active_status = request.query_params.get('status') %}
 {% set status_counts = status_counts or {} %}
 {% set base_params = request.query_params|remove('status')|remove('page') %}
 {% set base_query = '?' ~ base_params if base_params else '' %}
