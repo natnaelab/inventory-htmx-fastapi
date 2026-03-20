@@ -5,6 +5,7 @@ from starlette.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+from urllib.parse import urlencode, parse_qsl
 
 from app.routes.hardware import router as hardware_router
 from app.routes.api import router as api_router
@@ -18,6 +19,24 @@ from app.audit.listeners import initialize_audit_listeners
 
 
 logger = logging.getLogger(__name__)
+
+
+def remove_query_param(params, key_to_remove):
+    if not params:
+        return ""
+
+    if hasattr(params, "multi_items"):
+        items = list(params.multi_items())
+    elif isinstance(params, dict):
+        items = list(params.items())
+    else:
+        items = parse_qsl(str(params), keep_blank_values=True)
+
+    filtered = [(key, value) for key, value in items if key != key_to_remove]
+    return urlencode(filtered)
+
+
+templates.env.filters["remove"] = remove_query_param
 
 
 @asynccontextmanager
@@ -38,9 +57,7 @@ def create_app() -> FastAPI:
         accept_header = request.headers.get("accept", "")
         if exc.status_code == 404 and "text/html" in accept_header:
             return templates.TemplateResponse(
-                "404.html", 
-                {"request": request}, 
-                status_code=404
+                "404.html", {"request": request}, status_code=404
             )
 
         return JSONResponse(
@@ -59,6 +76,6 @@ def create_app() -> FastAPI:
     app.include_router(pages_router)
     app.include_router(hardware_router, prefix="/hardware")
     app.include_router(audit_log_router, prefix="")
-    # app.include_router(api_router, prefix="/api", tags=["api"])
+    app.include_router(api_router, prefix="/api", tags=["api"])
 
     return app

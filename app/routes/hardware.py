@@ -1,9 +1,20 @@
+import json
 import logging
 import math
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any, List
+from urllib.parse import urlparse, parse_qs
 
-from fastapi import APIRouter, Request, Depends, HTTPException, Query, Form, UploadFile, File
+from fastapi import (
+    APIRouter,
+    Request,
+    Depends,
+    HTTPException,
+    Query,
+    Form,
+    UploadFile,
+    File,
+)
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
@@ -19,6 +30,114 @@ from app.services.audit import AuditService
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _get_filter_params(request: Request) -> Dict[str, Any]:
+    current_url = request.headers.get("HX-Current-URL")
+
+    if current_url:
+        parsed = urlparse(current_url)
+        raw_params = parse_qs(parsed.query)
+
+        def get_list(name: str) -> List[str]:
+            return [v for v in raw_params.get(name, []) if v]
+
+        def get_one(name: str, default: Optional[str] = None) -> Optional[str]:
+            values = raw_params.get(name)
+            if not values:
+                return default
+            value = values[-1]
+            return value or default
+
+    else:
+        raw_params = request.query_params
+
+        def get_list(name: str) -> List[str]:
+            return [v for v in raw_params.getlist(name) if v]
+
+        def get_one(name: str, default: Optional[str] = None) -> Optional[str]:
+            value = raw_params.get(name, default)
+            return value or default
+
+    def to_int(value: Optional[str], default: int) -> int:
+        try:
+            return int(value) if value is not None else default
+        except (TypeError, ValueError):
+            return default
+
+    return {
+        "search": get_one("search"),
+        "status": get_list("status") or None,
+        "model": get_one("model"),
+        "center": get_one("center"),
+        "page": to_int(get_one("page"), 1),
+        "per_page": to_int(get_one("per_page"), 20),
+        "sort_by": get_one("sort_by", "updated_at") or "updated_at",
+        "sort_order": get_one("sort_order", "desc") or "desc",
+    }
+
+
+def _render_hardware_table(
+    request: Request,
+    hardware_service: HardwareService,
+    current_user: Dict[str, Any],
+    filters: Dict[str, Any],
+):
+    result = hardware_service.get_hardware_list(
+        search=filters["search"],
+        status=filters["status"],
+        model=filters["model"],
+        center=filters["center"],
+        page=filters["page"],
+        per_page=filters["per_page"],
+        sort_by=filters["sort_by"],
+        sort_order=filters["sort_order"],
+    )
+
+    total_pages = result["total_pages"] or 0
+    if total_pages and filters["page"] > total_pages:
+        filters["page"] = total_pages
+        result = hardware_service.get_hardware_list(
+            search=filters["search"],
+            status=filters["status"],
+            model=filters["model"],
+            center=filters["center"],
+            page=filters["page"],
+            per_page=filters["per_page"],
+            sort_by=filters["sort_by"],
+            sort_order=filters["sort_order"],
+        )
+    elif total_pages == 0 and filters["page"] != 1:
+        filters["page"] = 1
+        result = hardware_service.get_hardware_list(
+            search=filters["search"],
+            status=filters["status"],
+            model=filters["model"],
+            center=filters["center"],
+            page=filters["page"],
+            per_page=filters["per_page"],
+            sort_by=filters["sort_by"],
+            sort_order=filters["sort_order"],
+        )
+
+    template_data = {
+        "request": request,
+        "hardware_list": result["hardware_list"],
+        "total_count": result["total_count"],
+        "current_page": result["current_page"],
+        "per_page": result["per_page"],
+        "total_pages": result["total_pages"],
+        "status_counts": result["status_counts"],
+        "search_query": filters["search"],
+        "status_filter": result["status_filter"],
+        "model_filter": filters["model"],
+        "center_filter": filters["center"],
+        "sort_by": filters["sort_by"],
+        "sort_order": filters["sort_order"],
+        "current_user": current_user,
+    }
+
+    return templates.TemplateResponse("partials/hardware_table.html", template_data)
 
 
 @router.get("", response_class=HTMLResponse)
@@ -68,7 +187,9 @@ async def hardware_list(
 
         is_htmx = request.headers.get("HX-Request") == "true"
         if is_htmx:
-            return templates.TemplateResponse("partials/hardware_table.html", template_data)
+            return templates.TemplateResponse(
+                "partials/hardware_table.html", template_data
+            )
 
         return templates.TemplateResponse("hardware_list.html", template_data)
 
@@ -80,7 +201,8 @@ async def hardware_list(
 @router.get("/add", response_class=HTMLResponse)
 async def add_hardware_form(request: Request, current_user=Depends(require_admin)):
     return templates.TemplateResponse(
-        "hardware_form.html", {"request": request, "hardware": None, "current_user": current_user}
+        "hardware_form.html",
+        {"request": request, "hardware": None, "current_user": current_user},
     )
 
 
@@ -153,14 +275,28 @@ async def bulk_import(
         hardware_service = HardwareService(db)
 
         filename = file.filename.lower()
-        if not (filename.endswith(".csv") or filename.endswith(".xlsx") or filename.endswith(".xls")):
-            raise HTTPException(status_code=400, detail="File must be a CSV or Excel file (.csv, .xlsx, .xls)")
+        if not (
+            filename.endswith(".csv")
+            or filename.endswith(".xlsx")
+            or filename.endswith(".xls")
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="File must be a CSV or Excel file (.csv, .xlsx, .xls)",
+            )
 
         contents = await file.read()
 
-        results = hardware_service.import_hardware_from_file(contents, filename, current_user)
+        preview = hardware_service.parse_import_file(contents, filename)
 
-        return templates.TemplateResponse("bulk_import_results.html", {"request": request, "results": results})
+        return templates.TemplateResponse(
+            "bulk_import_preview.html",
+            {
+                "request": request,
+                "preview": preview,
+                "file_name": file.filename,
+            },
+        )
 
     except ValueError as e:
         logger.error(f"Invalid file format: {e}")
@@ -169,9 +305,62 @@ async def bulk_import(
         logger.error(f"Error importing file: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to import file: {str(e)}")
 
+
+@router.post("/import/confirm")
+async def bulk_import_confirm(
+    request: Request,
+    db: Session = Depends(get_session),
+    current_user=Depends(require_admin),
+    payload: str = Form(...),
+):
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid confirmation payload")
+
+    valid_items = data.get("valid_items", [])
+    if not valid_items:
+        return templates.TemplateResponse(
+            "bulk_import_results.html",
+            {
+                "request": request,
+                "results": {
+                    "total_rows": data.get("total_rows", 0),
+                    "created": 0,
+                    "updated": 0,
+                    "errors": data.get("errors", []) + ["No valid entries to import."],
+                },
+            },
+            status_code=400,
+        )
+
+    hardware_service = HardwareService(db)
+
+    apply_summary = hardware_service.apply_import_data(
+        [item.get("data", {}) for item in valid_items],
+        current_user,
+    )
+
+    combined_errors = data.get("errors", []) + apply_summary["errors"]
+
+    results = {
+        "total_rows": data.get("total_rows", 0),
+        "created": apply_summary["created"],
+        "updated": apply_summary["updated"],
+        "errors": combined_errors,
+    }
+
+    return templates.TemplateResponse(
+        "bulk_import_results.html", {"request": request, "results": results}
+    )
+
+
 @router.get("/{hardware_id}/edit", response_class=HTMLResponse)
 async def edit_hardware_form(
-    request: Request, hardware_id: int, db: Session = Depends(get_session), current_user=Depends(require_admin)
+    request: Request,
+    hardware_id: int,
+    db: Session = Depends(get_session),
+    current_user=Depends(require_admin),
 ):
     try:
         hardware_service = HardwareService(db)
@@ -180,7 +369,8 @@ async def edit_hardware_form(
             raise HTTPException(status_code=404, detail="Hardware not found")
 
         return templates.TemplateResponse(
-            "hardware_form.html", {"request": request, "hardware": hardware, "current_user": current_user}
+            "hardware_form.html",
+            {"request": request, "hardware": hardware, "current_user": current_user},
         )
     except Exception as e:
         logger.error(f"Error loading hardware edit form: {e}")
@@ -226,7 +416,9 @@ async def edit_hardware(
             "missing": missing,
         }
 
-        hardware = hardware_service.update_hardware(hardware_id, hardware_data, current_user)
+        hardware = hardware_service.update_hardware(
+            hardware_id, hardware_data, current_user
+        )
 
         is_htmx = request.headers.get("HX-Request") == "true"
         if is_htmx:
@@ -246,26 +438,22 @@ async def edit_hardware(
 
 @router.delete("/{hardware_id}")
 async def delete_hardware(
-    request: Request, hardware_id: int, db: Session = Depends(get_session), current_user=Depends(require_admin)
+    request: Request,
+    hardware_id: int,
+    db: Session = Depends(get_session),
+    current_user=Depends(require_admin),
 ):
     try:
         hardware_service = HardwareService(db)
         hardware_service.delete_hardware(hardware_id)
 
-        result = hardware_service.get_hardware_list(page=1, per_page=20, sort_by="updated_at", sort_order="desc")
+        if request.headers.get("HX-Request") == "true":
+            filters = _get_filter_params(request)
+            return _render_hardware_table(
+                request, hardware_service, current_user, filters
+            )
 
-        return templates.TemplateResponse(
-            "partials/hardware_table.html",
-            {
-                "request": request,
-                "hardware_list": result["hardware_list"],
-                "total_count": result["total_count"],
-                "current_page": result["current_page"],
-                "per_page": result["per_page"],
-                "total_pages": result["total_pages"],
-                "current_user": current_user,
-            },
-        )
+        return RedirectResponse(url="/hardware", status_code=303)
 
     except ValueError as e:
         logger.error(f"Error deleting hardware: {e}")
@@ -277,7 +465,10 @@ async def delete_hardware(
 
 @router.get("/{hardware_id}", response_class=HTMLResponse)
 async def hardware_detail(
-    request: Request, hardware_id: int, db: Session = Depends(get_session), current_user=Depends(get_current_user)
+    request: Request,
+    hardware_id: int,
+    db: Session = Depends(get_session),
+    current_user=Depends(get_current_user),
 ):
     try:
         hardware_service = HardwareService(db)
@@ -308,7 +499,9 @@ async def export_hardware_excel(
         hardware_service = HardwareService(db)
 
         # Export data to Excel
-        output = hardware_service.export_hardware_to_excel(search=search, status=status, model=model, center=center)
+        output = hardware_service.export_hardware_to_excel(
+            search=search, status=status, model=model, center=center
+        )
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"hardware_inventory_{timestamp}.xlsx"
@@ -326,7 +519,9 @@ async def export_hardware_excel(
 
 @router.get("/{hardware_id}/qr")
 async def generate_qr_code(
-    hardware_id: int, db: Session = Depends(get_session), current_user=Depends(require_visitor)
+    hardware_id: int,
+    db: Session = Depends(get_session),
+    current_user=Depends(require_visitor),
 ):
     """Generate QR code for hardware detail page"""
     try:
@@ -349,7 +544,9 @@ async def generate_qr_code(
 
 @router.get("/{hardware_id}/label")
 async def generate_label_csv(
-    hardware_id: int, db: Session = Depends(get_session), current_user=Depends(require_visitor)
+    hardware_id: int,
+    db: Session = Depends(get_session),
+    current_user=Depends(require_visitor),
 ):
     try:
         hardware_service = HardwareService(db)
@@ -370,6 +567,7 @@ async def generate_label_csv(
 
 @router.post("/{hardware_id}/status")
 async def quick_status_change(
+    request: Request,
     hardware_id: int,
     db: Session = Depends(get_session),
     current_user=Depends(require_admin),
@@ -378,7 +576,15 @@ async def quick_status_change(
     """Quick status change for hardware"""
     try:
         hardware_service = HardwareService(db)
-        hardware = hardware_service.change_hardware_status(hardware_id, status, current_user)
+        hardware = hardware_service.change_hardware_status(
+            hardware_id, status, current_user
+        )
+
+        if request.headers.get("HX-Request") == "true":
+            filters = _get_filter_params(request)
+            return _render_hardware_table(
+                request, hardware_service, current_user, filters
+            )
 
         return {"success": True, "message": f"Status changed to {status.value}"}
 
@@ -399,7 +605,9 @@ async def cycle_status(
 ):
     try:
         hardware_service = HardwareService(db)
-        hardware, status_display = hardware_service.cycle_hardware_status(hardware_id, current_user)
+        hardware, status_display = hardware_service.cycle_hardware_status(
+            hardware_id, current_user
+        )
 
         status_class = hardware.status.value.lower().replace("_", "-")
 
@@ -436,12 +644,17 @@ async def hardware_history_view(
 
         hardware_item = hardware_service.get_hardware_by_id(hardware_id)
         if not hardware_item:
-            return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+            return templates.TemplateResponse(
+                "404.html", {"request": request}, status_code=404
+            )
 
         PAGE_SIZE = 15
 
         history_data = audit_service.get_entity_history(
-            entity_name="Hardware", entity_id=str(hardware_id), page=page, limit=PAGE_SIZE
+            entity_name="Hardware",
+            entity_id=str(hardware_id),
+            page=page,
+            limit=PAGE_SIZE,
         )
         if history_data is None:
             history_data = {"logs": [], "total": 0}

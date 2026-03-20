@@ -99,9 +99,6 @@ class InventoryApp {
     }
 
     setupTooltips() {
-
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
     }
 
     setupAutoSave() {
@@ -155,9 +152,88 @@ class InventoryApp {
     }
 
     setupDashboardFeatures() {
+        const shortcuts = Array.from(document.querySelectorAll('[data-dashboard-status]'));
+        if (!shortcuts.length) return;
 
+        const filterForm = document.querySelector('form[hx-get="/hardware"]');
+        if (!filterForm) return;
+
+        shortcuts.forEach((button) => {
+            if (button.dataset.dashboardBound === 'true') return;
+
+            button.dataset.dashboardBound = 'true';
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.handleDashboardShortcutClick(button, filterForm, shortcuts);
+            });
+        });
+
+        const statusInputs = filterForm.querySelectorAll('input[name="status"]');
+        statusInputs.forEach((input) => {
+            if (input.dataset.dashboardWatch === 'true') return;
+
+            input.dataset.dashboardWatch = 'true';
+            input.addEventListener('change', () => this.syncDashboardShortcutStates(filterForm, shortcuts));
+        });
+
+        this.syncDashboardShortcutStates(filterForm, shortcuts);
     }
 
+    handleDashboardShortcutClick(button, form, shortcuts) {
+        const status = button.dataset.dashboardStatus;
+        const statusInputs = Array.from(form.querySelectorAll('input[name="status"]'));
+        if (!statusInputs.length) return;
+
+        if (status === 'ALL') {
+            statusInputs.forEach((input) => {
+                input.checked = true;
+            });
+        } else {
+            statusInputs.forEach((input) => {
+                input.checked = input.value === status;
+            });
+        }
+
+        this.syncDashboardShortcutStates(form, shortcuts);
+
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+            return;
+        }
+
+        if (window.htmx) {
+            htmx.trigger(form, 'submit');
+        } else {
+            form.submit();
+        }
+    }
+
+    syncDashboardShortcutStates(form, shortcuts) {
+        const statusInputs = Array.from(form.querySelectorAll('input[name="status"]'));
+        const activeStatuses = statusInputs.filter((input) => input.checked).map((input) => input.value);
+        const totalStatuses = statusInputs.length;
+        const hasCompletedOption = statusInputs.some((input) => input.value === 'COMPLETED');
+
+        shortcuts.forEach((button) => {
+            const targetStatus = button.dataset.dashboardStatus;
+            let isActive = false;
+
+            if (targetStatus === 'ALL') {
+                const allStatusesSelected = activeStatuses.length === totalStatuses;
+                const allButCompletedSelected =
+                    hasCompletedOption &&
+                    activeStatuses.length === totalStatuses - 1 &&
+                    !activeStatuses.includes('COMPLETED');
+                const noStatusesSelected = activeStatuses.length === 0;
+                isActive = allStatusesSelected || allButCompletedSelected || noStatusesSelected;
+            } else {
+                isActive = activeStatuses.length === 1 && activeStatuses[0] === targetStatus;
+            }
+
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-pressed', String(isActive));
+        });
+    }
 
     handleBeforeRequest(event) {
 
@@ -521,10 +597,6 @@ class InventoryApp {
     }
 
     reinitializeComponents() {
-        // Reinitialize tooltips for new content
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]:not([data-bs-original-title])'));
-        tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-
         // Reinitialize any custom components
         this.initializeCustomSelects();
         this.initializeCounters();
@@ -642,12 +714,41 @@ window.copyToClipboard = function (text) {
 
 
 window.deleteHardware = function (hardwareId, hostname) {
-    if (confirm(`Are you sure you want to delete "${hostname}"? This action cannot be undone.`)) {
-        htmx.ajax('DELETE', `/hardware/${hardwareId}`, {
-            target: '#hardware-table-container',
-            swap: 'outerHTML'
-        });
+    if (!confirm(`Are you sure you want to delete "${hostname}"? This action cannot be undone.`)) {
+        return;
     }
+
+    const container = document.querySelector('#hardware-table-container');
+    let requestUrl = `/hardware/${hardwareId}`;
+    let currentUrlHeader = window.location.href;
+
+    if (container) {
+        const activePageLink = container.querySelector('.pagination .page-item.active a');
+        const statePath = activePageLink ? activePageLink.getAttribute('hx-get') : null;
+
+        if (statePath) {
+            try {
+                const url = new URL(statePath, window.location.origin);
+                if (url.search) {
+                    requestUrl = `${requestUrl}${url.search}`;
+                }
+                currentUrlHeader = url.toString();
+            } catch (error) {
+                console.error('Failed to resolve pagination state URL:', error);
+            }
+        } else if (window.location.search) {
+            requestUrl = `${requestUrl}${window.location.search}`;
+        }
+    } else if (window.location.search) {
+        requestUrl = `${requestUrl}${window.location.search}`;
+    }
+
+    htmx.ajax('DELETE', requestUrl, {
+        target: '#hardware-table-container',
+        headers: {
+            'HX-Current-URL': currentUrlHeader
+        }
+    });
 };
 
 window.clearFilters = function () {

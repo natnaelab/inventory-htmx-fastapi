@@ -16,15 +16,23 @@
 {% endblock %}
 
 {% block content %}
-{% include "partials/stats_cards.html" %}
+<div class="row dashboard-grid">
+    <div class="col-12 col-xl-3 mb-4 mb-xl-0">
+        <div class="dashboard-stats">
+            {% include "partials/stats_cards.html" %}
+        </div>
+    </div>
 
-<!-- Search and Filter Bar -->
-<div class="search-bar">
-    {% include "partials/hardware_filter.html" with context %}
-</div>
+    <div class="col-12 col-xl-9">
+        <!-- Search and Filter Bar -->
+        <div class="search-bar">
+            {% include "partials/hardware_filter.html" with context %}
+        </div>
 
-<!-- Hardware Table Container -->
-<div id="hardware-table-container">
-    {% include "partials/hardware_table.html" %}
+        <!-- Hardware Table Container -->
+        <div id="hardware-table-container">
+            {% include "partials/hardware_table.html" %}
+        </div>
+    </div>
 </div>
 {% endblock %}
